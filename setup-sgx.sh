@@ -31,7 +31,7 @@ sudo apt install -y cmake flex bison gnupg2 libelf-dev \
   ocaml ocamlbuild automake python-is-python3 git perl protobuf-compiler \
   libprotobuf-dev debhelper reprepro unzip pkgconf libboost-dev  \
   libboost-system-dev libboost-thread-dev lsb-release libsystemd0 \
-  indent
+  indent cpuid
 
 # Get SGX-SDK source code
 if [[ ! -d ./linux-sgx ]]; then
