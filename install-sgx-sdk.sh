@@ -120,13 +120,17 @@ if [[ "${USE_OPT_LIBS}" == '0' || "${USE_OPT_LIBS}" == '1' ]]; then
     exec_cmd "sudo make sdk -j$(nproc) DEBUG='${DEBUG}' USE_OPT_LIBS='${USE_OPT_LIBS}'"
     
     # Compile Intel SGX installer
-    exec_cmd "sudo make sdk_install_pkg -j$(nproc) DEBUG='${DEBUG}'"
+    # Obs: compiling with -j1, because protobuf sometimes fails when building in parallel.
+    echo "sudo make sdk_install_pkg -j1 DEBUG='${DEBUG}'"
+    sudo make sdk_install_pkg -j1 DEBUG="${DEBUG}"
 else
     # Compile o SGX-SDK
     exec_cmd "make sdk_no_mitigation -j$(nproc) DEBUG='${DEBUG}' USE_OPT_LIBS='${USE_OPT_LIBS}'"
     
     # Compile Intel SGX installer
-    exec_cmd "make sdk_install_pkg -j$(nproc) DEBUG='${DEBUG}'"
+    # Obs: compiling with -j1, because protobuf sometimes fails when building in parallel.
+    echo "make sdk_install_pkg -j1 DEBUG='${DEBUG}'"
+    make sdk_install_pkg -j1 DEBUG="${DEBUG}"
 fi
 
 # Extract SGX-SDK version
