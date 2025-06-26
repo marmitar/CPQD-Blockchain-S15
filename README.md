@@ -10,8 +10,8 @@ First make sure you have the latest [linux-sgx-sdk](https://github.com/intel/lin
 git clone https://github.com/Lohann/intel-sgx-template.git
 cd intel-sgx-template
 
-# Setup SGX-SDK, obs: only tested on Ubuntu 24.04
-./setup-sgx.sh
+# Install Linux SGX-SDK, obs: only tested on Ubuntu 24.04
+./install-sgx-sdk.sh
 ```
 
 Now to build this project, use one of the following options:
