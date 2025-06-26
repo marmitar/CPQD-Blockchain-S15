@@ -44,7 +44,7 @@ Use [ark.intel](https://www.intel.com/content/www/us/en/ark/featurefilter.html?p
 
 One easy way to check if your linux machine have SGX enabled, is using dmesg:
 ```bash
-sudo dmesg | grep sgx
+sudo dmesg | grep -i sgx
 ```
 But dmesg will show nothing if your machine doesn't support it, another alternative is CPUID.
 ```bash

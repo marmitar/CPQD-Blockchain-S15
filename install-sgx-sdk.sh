@@ -8,7 +8,7 @@ if [ -z "${SGX_SDK_DIR}" ]; then
 fi
 if [ -z ${USE_OPT_LIBS+x} ]; then
     # Use IPP crypto by default
-    USE_OPT_LIBS=1
+    USE_OPT_LIBS=3
 fi
 
 # Check if this terminal supports colors
@@ -58,30 +58,14 @@ exec_cmd() {
   fi
 }
 
-# Return the resolved physical path
-#
-# We need it rather than SCRIPTPATH=`pwd` in order to properly handle spaces and symlinks.
-# The inclusion of output redirection (>/dev/null 2>&1) handles the rare(?) case where cd might produce output that 
-# would interfere with the surrounding $( ... ) capture. Such as cd being overridden to also ls a directory after
-# switching to it: https://unix.stackexchange.com/questions/20396/make-cd-automatically-ls/20413#20413
-#
-# Reference: https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
-absolute_dir(){
-    var="$1"
-    test -e "$var" || die "'$var' - file doesn't exist"
-    test -d "$var" || var="$(dirname "$var")"
-    var="$( cd -- "$var" >/dev/null 2>&1 || exit $? ; pwd -P )"
-    test "$?" != 0 && exit 1
-    echo "${var}"
-}
-
 # Convert a string to lowercase
 tolower(){
     echo "$@" | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
 }
 
 # Make sure `SGX_SDK_DIR` is an absolute path
-SGX_SDK_DIR="$(absolute_dir "${SGX_SDK_DIR}")"
+realpath "${SGX_SDK_DIR}" || die "invalid SGX_SDK_DIR: '${SGX_SDK_DIR}'"
+SGX_SDK_DIR="$(realpath "${SGX_SDK_DIR}")"
 
 # Check if intell SGX-SDK is already installed.
 if [ -d "${SGX_SDK_DIR}/sgxsdk" ]; then
@@ -126,16 +110,24 @@ exec_cmd 'make clean'
 # Download project depedencies
 exec_cmd 'make preparation'
 
-# Compile o SGX-SDK
-#   USE_OPT_LIBS=0 — Compile SGXSSL and String/Math
-#   USE_OPT_LIBS=1 — Compile IPP crypto and String/Math
-#   USE_OPT_LIBS=2 — Compile SGXSSL without mitigation and use an optimized String/Math
-#   USE_OPT_LIBS=3 — Compile IPP crypto without mitigation and use an optimized String/Math
-#   DEBUG=1        — Enable Debug.
-exec_cmd "sudo make sdk -j$(nproc) DEBUG='${DEBUG}' USE_OPT_LIBS='${USE_OPT_LIBS}'"
-
-# Compile Intel SGX installer
-exec_cmd "sudo make sdk_install_pkg -j$(nproc) DEBUG='${DEBUG}'"
+# USE_OPT_LIBS=0 — Compile SGXSSL and String/Math
+# USE_OPT_LIBS=1 — Compile IPP crypto and String/Math
+# USE_OPT_LIBS=2 — Compile SGXSSL without mitigation and use an optimized String/Math
+# USE_OPT_LIBS=3 — Compile IPP crypto without mitigation and use an optimized String/Math
+# DEBUG=1        — Enable Debug.
+if [[ "${USE_OPT_LIBS}" == '0' || "${USE_OPT_LIBS}" == '1' ]]; then
+    # Compile o SGX-SDK
+    exec_cmd "sudo make sdk -j$(nproc) DEBUG='${DEBUG}' USE_OPT_LIBS='${USE_OPT_LIBS}'"
+    
+    # Compile Intel SGX installer
+    exec_cmd "sudo make sdk_install_pkg -j$(nproc) DEBUG='${DEBUG}'"
+else
+    # Compile o SGX-SDK
+    exec_cmd "make sdk_no_mitigation -j$(nproc) DEBUG='${DEBUG}' USE_OPT_LIBS='${USE_OPT_LIBS}'"
+    
+    # Compile Intel SGX installer
+    exec_cmd "make sdk_install_pkg -j$(nproc) DEBUG='${DEBUG}'"
+fi
 
 # Extract SGX-SDK version
 export SGX_SDK_VERSION="$(cat ./common/inc/internal/se_version.h | grep '#define STRFILEVER' | awk  '{print $3}' | tr -d \")"
@@ -151,7 +143,7 @@ printf 'sudo %s\n' "./linux/installer/bin/sgx_linux_x64_sdk_${SGX_SDK_VERSION}.b
 printf "n\n%s\n" "${SGX_SDK_DIR}" | sudo ./linux/installer/bin/"sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin"
 
 # Load SGX-SDK environment variables
-exec_cmd "source '${SGX_SDK_DIR}/sgxsdk/environment'"
+source "${SGX_SDK_DIR}/sgxsdk/environment" || die "failed to load sdk env: '${SGX_SDK_DIR}/sgxsdk/environment'"
 
 # Compile and run example code using Simulation Mode
 printf "Compiling example project...\n"
