@@ -13,7 +13,7 @@ fi
 
 # Check if intell SGX-SDK is already installed.
 if [ -d "${SGX_SDK_DIR}/sgxsdk" ]; then
-    printf 'SGX-SDK is already installed at "%s"' "${SGX_SDK_DIR}/sgxsdk"
+    printf 'SGX-SDK is already installed at "%s"\n' "${SGX_SDK_DIR}/sgxsdk"
     exit 0
 fi
 
