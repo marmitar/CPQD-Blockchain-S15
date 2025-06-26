@@ -29,6 +29,11 @@ make
 make SGX_DEBUG=0
 ```
 
+Format the code using [GNU indent](https://www.gnu.org/software/indent/manual/indent.html)
+```shell
+make format
+```
+
 Run the App
 ```shell
 ./main
