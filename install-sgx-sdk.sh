@@ -45,18 +45,16 @@ print_failed_command() {
 
 # Execute a command and only print it if it fails
 exec_cmd() {
-  printf '  %s... ' "$1"
+  printf '%s ' "$1"
   local cmdOutput
-  if eval "cmdOutput=\$( { $2 ;} 2>&1 )" > /dev/null; then
+  if eval "cmdOutput=\$( { $1 ;} 2>&1 )" > /dev/null; then
     # Success
     echo "${bold_color}${green_color}OK${reset_color}"
   else
     # Failure
     echo "${bold_color}${error_color}FAILED${reset_color}"
-    print_failed_command "$2" "${cmdOutput}"
-    if [ "${1}" != 'test' ]; then
-        exit 1
-    fi
+    print_failed_command "$1" "${cmdOutput}"
+    exit 1
   fi
 }
 
@@ -97,34 +95,36 @@ then
 fi
 
 # Update system
-sudo apt update -y && sudo apt upgrade -y
+exec_cmd 'set -eux; sudo apt-get update -y'
+exec_cmd 'set -eux; sudo apt-get upgrade -y'
 
-# Install essential tools development tools
-sudo apt install -y curl wget git-all build-essential
+# Install essential development tools
+exec_cmd 'set -eux; sudo apt install -y --no-install-recommends curl wget git-all build-essential indent cpuid'
 
 # Install dependencies needed for compile SGX-SDK
-sudo apt install -y cmake flex bison gnupg2 libelf-dev \
-  libncurses5-dev libssl-dev pahole autoconf gperf autopoint \
-  texinfo texi2html gettext libtool libreadline-dev libbz2-dev \
-  libsqlite3-dev liblzma-dev libffi-dev libcurl4-openssl-dev \
-  ocaml ocamlbuild automake python-is-python3 perl protobuf-compiler \
-  libprotobuf-dev debhelper reprepro unzip pkgconf libboost-dev  \
-  libboost-system-dev libboost-thread-dev lsb-release libsystemd0 \
-  indent cpuid
+exec_cmd \
+    'sudo apt-get install -y --no-install-recommends \
+    cmake flex bison gnupg2 libelf-dev libncurses5-dev libssl-dev \
+    pahole autoconf gperf autopoint texinfo texi2html gettext \
+    libtool libreadline-dev libbz2-dev ocaml libsqlite3-dev \
+    liblzma-dev libffi-dev libcurl4-openssl-dev ocamlbuild automake \
+    python-is-python3 perl protobuf-compiler libprotobuf-dev \
+    debhelper reprepro unzip pkgconf libboost-dev libboost-system-dev \
+    libboost-thread-dev lsb-release libsystemd0'
 
 # Get SGX-SDK source code
 if [[ ! -d ./linux-sgx ]]; then
-    git clone https://github.com/intel/linux-sgx.git
+    exec_cmd 'git clone https://github.com/intel/linux-sgx.git'
 fi
 
-# Enter in linux-sgx folder
-cd linux-sgx
+# Enter in linux-sgx directory
+pushd linux-sgx
 
 # Make sure we are doing a clean install
-make clean
+exec_cmd 'make clean'
 
 # Download project depedencies
-make preparation
+exec_cmd 'make preparation'
 
 # Compile o SGX-SDK
 #   USE_OPT_LIBS=0 — Compile SGXSSL and String/Math
@@ -132,32 +132,44 @@ make preparation
 #   USE_OPT_LIBS=2 — Compile SGXSSL without mitigation and use an optimized String/Math
 #   USE_OPT_LIBS=3 — Compile IPP crypto without mitigation and use an optimized String/Math
 #   DEBUG=1        — Enable Debug.
-sudo make sdk -j"$(nproc)" DEBUG="${DEBUG}" USE_OPT_LIBS="${USE_OPT_LIBS}"
+exec_cmd "sudo make sdk -j$(nproc) DEBUG='${DEBUG}' USE_OPT_LIBS='${USE_OPT_LIBS}'"
 
 # Compile Intel SGX installer
-sudo make sdk_install_pkg -j"$(nproc)" DEBUG="${DEBUG}"
+exec_cmd "sudo make sdk_install_pkg -j$(nproc) DEBUG='${DEBUG}'"
 
 # Extract SGX-SDK version
 export SGX_SDK_VERSION="$(cat ./common/inc/internal/se_version.h | grep '#define STRFILEVER' | awk  '{print $3}' | tr -d \")"
-printf "SGX SDK version: %s\n" "${SGX_SDK_VERSION}"
+printf "${bold_color}SGX SDK version: ${green_color}%s${reset_color}\n" "${SGX_SDK_VERSION}"
 
 # Exec the installer at ./linux/installer/bin/sgx_linux_x64_sdk_XXXXXXXX.bin
 # Install SGX-SDK at the directory defined by "SGX_SDK_DIR"
 if [ ! -d "${SGX_SDK_DIR}" ]; then
-    sudo mkdir -v "${SGX_SDK_DIR}" || die "cannot create directory '${SGX_SDK_DIR}'"
+    exec_cmd "sudo mkdir -v '${SGX_SDK_DIR}'"
+    # die "cannot create directory '${SGX_SDK_DIR}'"
 fi
+printf 'sudo %s\n' "./linux/installer/bin/sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin"
 printf "n\n%s\n" "${SGX_SDK_DIR}" | sudo ./linux/installer/bin/"sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin"
 
 # Load SGX-SDK environment variables
-source "${SGX_SDK_DIR}/sgxsdk/environment"
+exec_cmd "source '${SGX_SDK_DIR}/sgxsdk/environment'"
 
 # Compile and run example code using Simulation Mode
 printf "Compiling example project...\n"
-cd SampleCode/LocalAttestation
-make SGX_MODE=SIM || die 'failed to compile SampleCode/LocalAttestation'
-cd bin
-./app || die 'failed to run SampleCode/LocalAttestation'
+pushd SampleCode || die "directory not found: $(pwd)/SampleCode"
+pushd LocalAttestation || die "sample project not found: $(pwd)/LocalAttestation"
+exec_cmd 'make SGX_MODE=SIM'
+pushd bin || die "directory not found: '$(pwd)/bin'"
+exec_cmd './app'
 
-printf "\n${bold_color}SGX SDK installed succesfully!${reset_color}\n\n"
-printf 'if you wish to load sgx-sdk automatically, run following command:\n'
-printf "${bold_color}echo '%s'${reset_color}\n" "source '${SGX_SDK_DIR}/sgxsdk/environment' >> ~/.bashrc"
+# SUCCESS, print configuration options
+printf "\n${bold_color}${green_color}SGX SDK installed succesfully!${reset_color}\n\n"
+printf 'if you wish to load sgx-sdk tools automatically, run following command:\n'
+if [ -e ~/.zshenv ]; then
+    SHELL_ENV_FILE='~/.zshenv'
+elif [ -e ~/.zshrc ]; then
+    SHELL_ENV_FILE='~/.zshrc'
+else
+    SHELL_ENV_FILE='~/.bashrc'
+fi
+printf "${bold_color}echo '%s'${reset_color}\n" \
+    "[ -d '${SGX_SDK_DIR}/sgxsdk'  ] && source '${SGX_SDK_DIR}/sgxsdk/environment' >> $SHELL_ENV_FILE"
