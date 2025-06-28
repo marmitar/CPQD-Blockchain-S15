@@ -28,7 +28,7 @@ To compile APP and/or ENCLAVE, use one of the following options:
 #   SGX_DEBUG=1     -> Enable Debug (default)
 #   SGX_DEBUG=0     -> Disable Debug
 
-# Compile APP and ENCLAVE and Hardware+Debug mode
+# Compile APP and ENCLAVE in Hardware+Debug mode
 make
 
 # Compile ONLY the APP in Hardware+Debug mode
@@ -37,7 +37,7 @@ make main
 # Compile ONLY the ENCLAVE in Hardware+Debug mode
 make enclave.signed.so
 
-# Compile APP in Simulation Simulated+Debug Mode
+# Compile APP in Simulated+Debug Mode
 make SGX_MODE=SIM main
 
 # Compile APP and ENCLAVE in Simulation+Release Mode
