@@ -1,6 +1,6 @@
 # Intel SGX Template Project
 
-Minimal `C` project intented to be used as template project to get started with Intel SGX.
+Minimal `C` project intended to be used as template project to get started with Intel SGX.
 
 ## Building
 
@@ -16,16 +16,19 @@ cd intel-sgx-template
 
 Now to build this project, use one of the following options:
 ```shell
+# First make sure SGX-SDK environment is set
+[ -z "$SGX_SDK" ] && source /opt/intel/sgxsdk/environment
+
 # Simulation Mode + Debug Mode
 make SGX_MODE=SIM
 
 # Simulation Mode + Release Mode
 make SGX_MODE=SIM SGX_DEBUG=0
 
-# Hardware Mode + Debug Mode (obs: requires SGX compatible CPU)
+# Hardware Mode + Debug Mode (obs: require SGX compatible CPU)
 make
 
-# Hardware Mode + Release Mode (obs: requires SGX compatible CPU)
+# Hardware Mode + Release Mode (obs: require SGX compatible CPU)
 make SGX_DEBUG=0
 ```
 

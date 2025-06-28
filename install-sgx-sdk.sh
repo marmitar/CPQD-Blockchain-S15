@@ -1,10 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 DEBUG="${DEBUG:-0}"
 if [ -z "${SGX_SDK_DIR}" ]; then
-    # SGX-SDK default directory
-    SGX_SDK_DIR="/opt/intel"
+    if [ -z "${SGX_SDK}" ]; then
+        SGX_SDK_DIR="$(dirname "${SGX_SDK}")"
+    else
+        # SGX-SDK default directory
+        SGX_SDK_DIR="/opt/intel"
+    fi
 fi
 if [ -z ${USE_OPT_LIBS+x} ]; then
     # Use IPP crypto by default
@@ -63,13 +67,28 @@ tolower(){
     echo "$@" | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz
 }
 
+# Display a message to load SGX-SDK environment if not set.
+show_sgx_setup_cmd(){
+    if [ -z "$SGX_SDK" ]; then
+        echo "${bold_color}please run: ${warn_color}source ${SGX_SDK_DIR}/sgxsdk/environment${reset_color}"
+    fi
+}
+
 # Make sure `SGX_SDK_DIR` is an absolute path
-realpath "${SGX_SDK_DIR}" || die "invalid SGX_SDK_DIR: '${SGX_SDK_DIR}'"
+realpath "${SGX_SDK_DIR}" > /dev/null 2>&1  || die "invalid SGX_SDK_DIR: '${SGX_SDK_DIR}'"
 SGX_SDK_DIR="$(realpath "${SGX_SDK_DIR}")"
 
 # Check if intell SGX-SDK is already installed.
 if [ -d "${SGX_SDK_DIR}/sgxsdk" ]; then
     echo "${bold_color}${green_color}SGX-SDK already installed:${reset_color} ${SGX_SDK_DIR}/sgxsdk"
+    show_sgx_setup_cmd
+    exit 0
+fi
+# Check if intell SGX-SDK is already installed.
+if [ -f "/opt/intel/sgxsdk/environment" ]; then
+    SGX_SDK_DIR='/opt/intel'
+    echo "${bold_color}${green_color}SGX-SDK already installed:${reset_color} ${SGX_SDK_DIR}/sgxsdk"
+    show_sgx_setup_cmd
     exit 0
 fi
 
@@ -83,7 +102,7 @@ exec_cmd 'set -eux; sudo apt-get update -y'
 exec_cmd 'set -eux; sudo apt-get upgrade -y'
 
 # Install essential development tools
-exec_cmd 'set -eux; sudo apt install -y --no-install-recommends curl wget git-all build-essential indent cpuid'
+exec_cmd 'set -eux; sudo apt-get install -y --no-install-recommends curl wget git-all build-essential indent cpuid'
 
 # Install dependencies needed for compile SGX-SDK
 exec_cmd \
@@ -102,7 +121,7 @@ if [[ ! -d ./linux-sgx ]]; then
 fi
 
 # Enter in linux-sgx directory
-pushd linux-sgx
+pushd linux-sgx > /dev/null 2>&1
 
 # Make sure we are doing a clean install
 exec_cmd 'make clean'
@@ -151,10 +170,10 @@ source "${SGX_SDK_DIR}/sgxsdk/environment" || die "failed to load sdk env: '${SG
 
 # Compile and run example code using Simulation Mode
 printf "Compiling example project...\n"
-pushd SampleCode || die "directory not found: $(pwd)/SampleCode"
-pushd LocalAttestation || die "sample project not found: $(pwd)/LocalAttestation"
+pushd SampleCode > /dev/null 2>&1 || die "directory not found: $(pwd)/SampleCode"
+pushd LocalAttestation > /dev/null 2>&1 || die "sample project not found: $(pwd)/LocalAttestation"
 exec_cmd 'make SGX_MODE=SIM'
-pushd bin || die "directory not found: '$(pwd)/bin'"
+pushd bin /dev/null 2>&1 || die "directory not found: '$(pwd)/bin'"
 exec_cmd './app'
 
 # SUCCESS, print configuration options
@@ -167,5 +186,5 @@ elif [ -e ~/.zshrc ]; then
 else
     SHELL_ENV_FILE='~/.bashrc'
 fi
-printf "${bold_color}echo '%s'${reset_color}\n" \
-    "[ -d '${SGX_SDK_DIR}/sgxsdk'  ] && source '${SGX_SDK_DIR}/sgxsdk/environment' >> $SHELL_ENV_FILE"
+printf "${bold_color}echo %s${reset_color}\n" \
+    "\"[ -d '${SGX_SDK_DIR}/sgxsdk' ] && source '${SGX_SDK_DIR}/sgxsdk/environment'\" >> $SHELL_ENV_FILE"
