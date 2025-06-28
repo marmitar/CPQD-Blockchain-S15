@@ -14,22 +14,37 @@ cd intel-sgx-template
 ./install-sgx-sdk.sh
 ```
 
-Now to build this project, use one of the following options:
+Make sure you have dev tools enabled in your terminal
 ```shell
 # First make sure SGX-SDK environment is set
 [ -z "$SGX_SDK" ] && source /opt/intel/sgxsdk/environment
+```
 
-# Simulation Mode + Debug Mode
-make SGX_MODE=SIM
+To compile APP and/or ENCLAVE, use one of the following options:
+```bash
+# Options:
+#   SGX_MODE=HW     -> Hardware Mode (default) obs: requires compatible CPU
+#   SGX_MODE=SIM    -> Simulation Mode
+#   SGX_DEBUG=1     -> Enable Debug (default)
+#   SGX_DEBUG=0     -> Disable Debug
 
-# Simulation Mode + Release Mode
-make SGX_MODE=SIM SGX_DEBUG=0
-
-# Hardware Mode + Debug Mode (obs: require SGX compatible CPU)
+# Compile APP and ENCLAVE and Hardware+Debug mode
 make
 
-# Hardware Mode + Release Mode (obs: require SGX compatible CPU)
-make SGX_DEBUG=0
+# Compile ONLY the APP in Hardware+Debug mode
+make main
+
+# Compile ONLY the ENCLAVE in Hardware+Debug mode
+make enclave.signed.so
+
+# Compile APP in Simulation Simulated+Debug Mode
+make SGX_MODE=SIM main
+
+# Compile APP and ENCLAVE in Simulation+Release Mode
+make SGX_MODE=SIM SGX_DEBUG=0
+
+# Compile ENCLAVE in Hardware+Release Mode
+make SGX_DEBUG=0 enclave.signed.so
 ```
 
 Format the code using [GNU indent](https://www.gnu.org/software/indent/manual/indent.html)
@@ -40,6 +55,11 @@ make format
 Run the App
 ```shell
 ./main
+```
+
+Remove generated files + Compile APP in Simulation Mode + Run app
+```shell
+make clean && make SGX_MODE=SIM && ./main
 ```
 
 ## Check SGX Hardware Support
@@ -115,8 +135,9 @@ enclave.so
 };
 ```
 
-For more details read the chapter **Setting up an Intel® Software Guard Extensions Project**  at [Intel SGX Developer Reference Linux 2.13 Open Source](https://download.01.org/intel-sgx/sgx-linux/2.13/docs/Intel_SGX_Developer_Reference_Linux_2.13_Open_Source.pdf). 
+For more details read the chapter **Setting up an Intel® Software Guard Extensions Project**  at [Intel SGX Developer Reference Linux 2.26 Open Source](https://download.01.org/intel-sgx/sgx-linux/2.26/docs/Intel_SGX_Developer_Reference_Linux_2.26_Open_Source.pdff). 
 
 ### References
-- [Intel SGX Developer Reference Linux](https://download.01.org/intel-sgx/sgx-linux/2.18.1/docs/Intel_SGX_Developer_Reference_Linux_2.18.1_Open_Source.pdf)
+- [Intel SGX Developer Reference Linux](https://download.01.org/intel-sgx/sgx-linux/2.26/docs/Intel_SGX_Developer_Reference_Linux_2.26_Open_Source.pdf)
 - [Enclave Definition Language - EDL](https://cdrdv2-public.intel.com/671446/input-types-and-boundary-checking-edl.pdf)
+- [SGX LINUX 2.26 all docs](https://download.01.org/intel-sgx/sgx-linux/2.26/docs/)
