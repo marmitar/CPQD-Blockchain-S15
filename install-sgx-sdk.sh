@@ -173,8 +173,8 @@ printf "Compiling example project...\n"
 pushd SampleCode > /dev/null 2>&1 || die "directory not found: $(pwd)/SampleCode"
 pushd LocalAttestation > /dev/null 2>&1 || die "sample project not found: $(pwd)/LocalAttestation"
 exec_cmd 'make SGX_MODE=SIM'
-pushd bin /dev/null 2>&1 || die "directory not found: '$(pwd)/bin'"
-exec_cmd './app'
+pushd bin > /dev/null 2>&1 || die "directory not found: '$(pwd)/bin'"
+./app > /dev/null 2>&1 || die "sgx example code failed: '$(pwd)/app'"
 
 # SUCCESS, print configuration options
 printf "\n${bold_color}${green_color}SGX SDK installed succesfully!${reset_color}\n\n"
