@@ -4,10 +4,10 @@ set -e
 DEBUG="${DEBUG:-0}"
 if [ -z "${SGX_SDK_DIR}" ]; then
     if [ -z "${SGX_SDK}" ]; then
-        SGX_SDK_DIR="$(dirname "${SGX_SDK}")"
-    else
         # SGX-SDK default directory
         SGX_SDK_DIR="/opt/intel"
+    else
+        SGX_SDK_DIR="$(dirname "${SGX_SDK}")"
     fi
 fi
 if [ -z ${USE_OPT_LIBS+x} ]; then
