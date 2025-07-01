@@ -1,0 +1,12 @@
+option('sgx_sdk',
+    type: 'string',
+    value: '/opt/intel/sgxsdk',
+    description: 'Path to SGX SDK root.',
+)
+
+option('sgx_mode',
+    type: 'combo',
+    choices: ['hw', 'sim', 'auto'],
+    value: 'auto',
+    description: 'Select between hardware SGX or simulated SGX. Use \'auto\' for hardware detection during build.',
+)

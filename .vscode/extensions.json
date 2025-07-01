@@ -2,5 +2,7 @@
   "recommendations": [
     "EditorConfig.EditorConfig",
     "llvm-vs-code-extensions.vscode-clangd",
+    "mesonbuild.mesonbuild",
+    "vadimcn.vscode-lldb",
   ],
 }
