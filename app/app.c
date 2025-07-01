@@ -5,6 +5,7 @@
 // clang-format on
 
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,30 @@ extern void ocall_print_string(const char *str) {
     }
 }
 
+/** Brute-force all possible passwords for challenge 2. */
+static unsigned desafio_2_senha(void) {
+    enable_output = false;
+
+    static const unsigned MAX_SENHA = 99'999;
+    for (unsigned i = 0; i <= MAX_SENHA; i++) {
+        int status = -1;
+        sgx_status_t ret = ecall_verificar_senha(global_eid, &status, i);
+        if (ret != SGX_SUCCESS) {
+            print_error_message(ret);
+            abort();
+        }
+
+        if (status == 0) {
+            enable_output = true;
+            return i;
+        }
+    }
+
+    enable_output = true;
+    printf("Info: No password matched.\n");
+    return 0;
+}
+
 /**
  * OCALL que será chamada 20x pela ecall `ecall_pedra_papel_tesoura`,
  * recebe como parametro o round atual, contando a partir do 1, até 20.
@@ -76,10 +101,21 @@ int SGX_CDECL main(void) {
 
     bool ok = true;
 
-    /*  DESAFIO 1: ecall_verificar_aluno */
+    /* DESAFIO 1: ecall_verificar_aluno */
     const char name[] = "Tiago De Paula Alves";
     int status = -1;
     sgx_status_t ret = ecall_verificar_aluno(global_eid, &status, name);
+    if (ret != SGX_SUCCESS) {
+        print_error_message(ret);
+        abort();
+    }
+    ok = ok && (status == 0);
+
+    /* DESAFIO 2: ecall_verificar_senha */
+    const unsigned password = desafio_2_senha();
+    printf("Info: Password = %u\n", password);
+
+    ret = ecall_verificar_senha(global_eid, &status, password);
     if (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
