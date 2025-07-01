@@ -6,16 +6,17 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <sgx_defs.h>
+#include <sgx_eid.h>
+#include <sgx_error.h>
+#include <sgx_urts.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "defines.h"
 #include "enclave_u.h"
 #include "error.h"
-#include "sgx_defs.h"
-#include "sgx_eid.h"
-#include "sgx_error.h"
-#include "sgx_urts.h"
 
 #if !defined(ENCLAVE_FILENAME)
 #    define ENCLAVE_FILENAME "enclave.signed.so"
@@ -31,7 +32,7 @@ static int initialize_enclave(void) {
     /* Call sgx_create_enclave to initialize an enclave instance */
     /* Debug Support: set 2nd parameter to 1 */
     sgx_status_t ret = sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, NULL, NULL, &global_eid, NULL);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         return -1;
     }
@@ -62,7 +63,7 @@ static unsigned desafio_2_senha(void) {
     for (unsigned i = 0; i <= MAX_SENHA; i++) {
         int status = -1;
         sgx_status_t ret = ecall_verificar_senha(global_eid, &status, i);
-        if (ret != SGX_SUCCESS) {
+        if unlikely (ret != SGX_SUCCESS) {
             print_error_message(ret);
             abort();
         }
@@ -101,7 +102,7 @@ static struct word desafio_3_first_guess(void) {
 static int desafio_3_update_guess(struct word *w, struct word t) {
     for (unsigned i = 0; i < WORD; i++) {
         if (t.s[i] != w->s[i]) {
-            if (w->s[i] < 'Z') {
+            if likely (w->s[i] < 'Z') {
                 w->s[i]++;
             } else {
                 return -1;
@@ -121,7 +122,7 @@ static struct word desafio_3_secret_word(void) {
 
         int status = -1;
         sgx_status_t ret = ecall_palavra_secreta(global_eid, &status, t.s);
-        if (ret != SGX_SUCCESS) {
+        if unlikely (ret != SGX_SUCCESS) {
             print_error_message(ret);
             abort();
         }
@@ -132,7 +133,7 @@ static struct word desafio_3_secret_word(void) {
         }
 
         status = desafio_3_update_guess(&w, t);
-        if (status != 0) {
+        if unlikely (status != 0) {
             enable_enclave_output = true;
             return (struct word) {.s = "<not found>"};
         }
@@ -154,7 +155,7 @@ static struct coeff desafio_4_coefficients(void) {
     // a + b + c = y1
     int y1 = 0;
     sgx_status_t ret = ecall_polinomio_secreto(global_eid, &y1, /*x=*/1);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
@@ -162,7 +163,7 @@ static struct coeff desafio_4_coefficients(void) {
     // 4a + 2b + c = y2
     int y2 = 0;
     ret = ecall_polinomio_secreto(global_eid, &y2, /*x=*/2);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
@@ -170,7 +171,7 @@ static struct coeff desafio_4_coefficients(void) {
     // 9a + 3b + c = y3
     int y3 = 0;
     ret = ecall_polinomio_secreto(global_eid, &y3, /*x=*/3);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
@@ -205,7 +206,7 @@ static uint8_t desafio_5_answers[ROUNDS] = {0};
  *       chamadas a essa função.
  **/
 extern unsigned ocall_pedra_papel_tesoura(unsigned int round) {
-    if (round < 1 || round > ROUNDS) {
+    if unlikely (round < 1 || round > ROUNDS) {
         (void) fprintf(stderr, "Error: invalid input round: %u\n", round);
         abort();
     }
@@ -216,12 +217,12 @@ static uint8_t desafio_5_wins(void) {
     int wins = -1;
 
     sgx_status_t ret = ecall_pedra_papel_tesoura(global_eid, &wins);
-    if (ret != SGX_SUCCESS || wins < 0 || wins >= UINT8_MAX) {
+    if unlikely (ret != SGX_SUCCESS || wins < 0 || wins >= UINT8_MAX) {
         print_error_message(ret);
         abort();
     }
 
-    if (wins >= 0 && wins <= UINT8_MAX) {
+    if likely (wins >= 0 && wins <= UINT8_MAX) {
         return (uint8_t) wins;
     }
 
@@ -230,7 +231,9 @@ static uint8_t desafio_5_wins(void) {
 }
 
 static unsigned desafio_5_greedy_solution(uint8_t s, uint8_t init(uint8_t i, uint8_t s)) {
-    if (init != NULL) {
+    assume(s <= 2 * ROUNDS);
+
+    if likely (init != NULL) {
         for (uint8_t i = s; i < ROUNDS; i++) {
             desafio_5_answers[i] = init(i, s);
         }
@@ -266,20 +269,32 @@ static unsigned desafio_5_greedy_solution(uint8_t s, uint8_t init(uint8_t i, uin
 }
 
 static uint8_t zero(uint8_t i, uint8_t s) {
+    assume(i <= ROUNDS);
+    assume(s <= ROUNDS);
+
     (void) i;
     (void) s;
     return 0;
 }
 
 static uint8_t add(uint8_t i, uint8_t s) {
+    assume(i <= ROUNDS);
+    assume(s <= ROUNDS);
+
     return (i + s - 1) % 3;
 }
 
 static uint8_t mul(uint8_t i, uint8_t s) {
+    assume(i <= ROUNDS);
+    assume(s <= ROUNDS);
+
     return (i * s + 1) % 3;
 }
 
 static uint8_t sq(uint8_t i, uint8_t s) {
+    assume(i <= ROUNDS);
+    assume(s <= ROUNDS);
+
     return (i * i + s * s) % 3;
 }
 
@@ -291,7 +306,7 @@ static unsigned desafio_5_limited_search(uint8_t s, uint8_t depth) {
 
     unsigned wt[3] = {0, 0, 0};
     for (uint8_t d = 0; d <= 2; d++) {
-        desafio_5_answers[s] = d;
+        desafio_5_answers[s] = d;  // FIXME: out-of-bounds access
         wt[d] = desafio_5_limited_search(s + 1, depth - 1);
     }
 
@@ -320,7 +335,7 @@ static void desafio_5_find_solution(void) {
 /* Application entry */
 int SGX_CDECL main(void) {
     /* Initialize the enclave */
-    if (initialize_enclave() != 0) {
+    if unlikely (initialize_enclave() != 0) {
         printf("Enter a character before exit ...\n");
         (void) getchar();
         return EXIT_FAILURE;
@@ -332,70 +347,70 @@ int SGX_CDECL main(void) {
     const char name[] = "Tiago De Paula Alves";
     int status = -1;
     sgx_status_t ret = ecall_verificar_aluno(global_eid, &status, name);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
-    ok = ok && (status == 0);
+    ok = likely(ok) && (status == 0);
 
     /* DESAFIO 2: ecall_verificar_senha */
     const unsigned password = desafio_2_senha();
     printf("Info: Password = %u\n", password);
 
     ret = ecall_verificar_senha(global_eid, &status, password);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
-    ok = ok && (status == 0);
+    ok = likely(ok) && (status == 0);
 
     /* DESAFIO 3: ecall_palavra_secreta */
     struct word secret = desafio_3_secret_word();
     printf("Info: Secret word = %20s\n", secret.s);
 
     ret = ecall_palavra_secreta(global_eid, &status, secret.s);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
-    ok = ok && (status == 0);
+    ok = likely(ok) && (status == 0);
 
     /* DESAFIO 4: ecall_polinomio_secreto */
     struct coeff poly = desafio_4_coefficients();
     printf("Info: Secret polynomial: a=%d, b=%d, c=%d\n", poly.a, poly.b, poly.c);
 
     ret = ecall_verificar_polinomio(global_eid, &status, poly.a, poly.b, poly.c);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
-    ok = ok && (status != 0);
+    ok = likely(ok) && (status != 0);
 
     /* DESAFIO 5: ecall_pedra_papel_tesoura */
     desafio_5_find_solution();
+    ret = ecall_pedra_papel_tesoura(global_eid, &status);
+    if unlikely (ret != SGX_SUCCESS) {
+        print_error_message(ret);
+        abort();
+    }
+    ok = likely(ok) && (status == ROUNDS);
+
     printf("Info: Pedra-papel-tesoura = [");
     for (unsigned i = 0; i < ROUNDS; i++) {
-        if (i > 0) {
+        if likely (i > 0) {
             printf(" ");
         }
         printf("%u", desafio_5_answers[i]);
     }
-
-    ret = ecall_pedra_papel_tesoura(global_eid, &status);
-    if (ret != SGX_SUCCESS) {
-        print_error_message(ret);
-        abort();
-    }
-    ok = ok && (status == ROUNDS);
     printf("], wins = %d\n", status);
 
     /* Destroy the enclave */
     ret = sgx_destroy_enclave(global_eid);
-    if (ret != SGX_SUCCESS) {
+    if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
 
     printf("Info: Enclave successfully returned.\n");
-    return ok ? EXIT_SUCCESS : EXIT_FAILURE;
+    return likely(ok) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

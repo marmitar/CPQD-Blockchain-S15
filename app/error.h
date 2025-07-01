@@ -1,7 +1,7 @@
 #ifndef APP_SGXERROR_H
 #define APP_SGXERROR_H
 
-#include "sgx_error.h"
+#include <sgx_error.h>
 
 /* Print error from enclave status */
 void print_error_message(sgx_status_t ret);

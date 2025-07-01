@@ -1,15 +1,17 @@
-#include "error.h"
-#include "sgx_error.h"
+#include <sgx_error.h>
 #include <stdio.h>
 
-struct sgx_errlist_t {
-    sgx_status_t err;
-    const char *msg;
-    const char *sug; /* Suggestion */
-};
+#include "defines.h"
+#include "error.h"
 
-/* Error code returned by sgx_create_enclave */
-static const struct sgx_errlist_t sgx_errlist[] = {
+typedef struct sgx_errlist_t {
+    sgx_status_t err;
+    const char *NONNULL msg;
+    const char *NULLABLE sug; /* Suggestion */
+} sgx_errlist_t;
+
+/** Error code returned by sgx_create_enclave */
+static const sgx_errlist_t sgx_errlist[] = {
     {
      .err = SGX_ERROR_UNEXPECTED,
      .msg = "Unexpected error occurred.",
@@ -85,9 +87,11 @@ static const struct sgx_errlist_t sgx_errlist[] = {
      .msg = "Can't open enclave file.",
      .sug = NULL,
      },
-    {.err = SGX_ERROR_NDEBUG_ENCLAVE,
+    {
+     .err = SGX_ERROR_NDEBUG_ENCLAVE,
      .msg = "The enclave is signed as product enclave, and can not be created as debuggable enclave.",
-     .sug = NULL},
+     .sug = NULL,
+     },
     {
      .err = SGX_ERROR_MEMORY_MAP_FAILURE,
      .msg = "Failed to reserve memory for the enclave.",
@@ -95,19 +99,30 @@ static const struct sgx_errlist_t sgx_errlist[] = {
      },
 };
 
-/* Check error conditions for loading enclave */
-extern void print_error_message(sgx_status_t ret) {
+[[gnu::const]]
+/** Map error code to message. */
+static sgx_errlist_t error_message(sgx_status_t ret) {
     const size_t ttl = sizeof(sgx_errlist) / sizeof(sgx_errlist[0]);
 
     for (size_t idx = 0; idx < ttl; idx++) {
         if (ret == sgx_errlist[idx].err) {
-            if (NULL != sgx_errlist[idx].sug) {
-                printf("Info: %s\n", sgx_errlist[idx].sug);
-            }
-            printf("Error: %s\n", sgx_errlist[idx].msg);
-            return;
+            return sgx_errlist[idx];
         }
     }
 
-    printf("Error: Unexpected error occurred.\n");
+    return (sgx_errlist_t) {
+        .err = ret,
+        .msg = "Unexpected error occurred.",
+        .sug = NULL,
+    };
+}
+
+/** Check error conditions for loading enclave */
+extern void print_error_message(sgx_status_t ret) {
+    const sgx_errlist_t err = error_message(ret);
+
+    if unlikely (err.sug != NULL) {
+        printf("Info: %s\n", err.sug);
+    }
+    printf("Error: %s\n", err.msg);
 }
