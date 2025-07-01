@@ -217,7 +217,7 @@ extern void desafio_5_find_solution(void) {
     enable_enclave_output = false;
 
     for (unsigned i = 0; i < ROUNDS; i++) {
-        desafio_5_answers[i] = 0;
+        desafio_5_answers[i] = i % 3;
     }
 
     int wins = -1;
@@ -233,6 +233,8 @@ extern void desafio_5_find_solution(void) {
     }
 
     while (wins < ROUNDS) {
+        uint8_t modified = 0;
+
         for (unsigned i = 0; i < ROUNDS; i++) {
             const uint8_t v = desafio_5_answers[i];
 
@@ -252,16 +254,24 @@ extern void desafio_5_find_solution(void) {
                 abort();
             }
 
-            // printf("v[i=%u]=%hhu, wins=%d, wins1=%d, wins2=%d\n", i, v, wins, wins1, wins2);
+            printf("v[i=%u]=%hhu, wins=%d, wins1=%d, wins2=%d\n", i, v, wins, wins1, wins2);
             if (wins > wins1 && wins > wins2) {
                 desafio_5_answers[i] = v;
                 // wins = wins;
             } else if (wins1 > wins2) {
                 desafio_5_answers[i] = (v + 1) % 3;
                 wins = wins1;
+                modified++;
             } else {
                 // desafio_5_answers[i] = (v + 2) % 3;
                 wins = wins2;
+                modified++;
+            }
+        }
+
+        if (modified == 0) {
+            for (unsigned i = 0; i < ROUNDS; i++) {
+                desafio_5_answers[i] = (desafio_5_answers[i] + 1) % 3;
             }
         }
     }
