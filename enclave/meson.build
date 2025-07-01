@@ -22,7 +22,6 @@ else
 endif
 
 sgx_edger8r = find_program('sgx_edger8r', dirs: SGX_PATH)
-sgx_sign = find_program('sgx_sign', dirs: SGX_PATH)
 
 sgx_trts = declare_dependency(
     include_directories: [
@@ -71,21 +70,8 @@ sgx_urts = declare_dependency(
     ],
 ).as_system('system')
 
-# # # # # # # # # # # # #
-# COMPILING THE ENCLAVE #
-
-trusted_enclave = custom_target('trusted-enclave',
-    command: [
-        sgx_edger8r,
-        '--search-path', '@CURRENT_SOURCE_DIR@',
-        '--search-path', SGX_INCLUDE,
-        '--trusted',
-        '--trusted-dir', '@OUTDIR@',
-        '@INPUT@'
-    ],
-    input: files('enclave.edl'),
-    output: ['enclave_t.c', 'enclave_t.h'],
-)
+# # # # # # # # # # # #
+# CHANLLENGE ENCLAVE  #
 
 untrusted_enclave = custom_target('untrusted-enclave',
     command: [
@@ -100,38 +86,6 @@ untrusted_enclave = custom_target('untrusted-enclave',
     output: ['enclave_u.c', 'enclave_u.h'],
 )
 
-enclave_lds = files(debugging_enabled ? 'enclave_debug.lds' : 'enclave.lds')
+fs = import('fs')
 
-enclave = shared_library('enclave',
-    files('enclave.c'),
-    trusted_enclave,
-    link_depends: [enclave_lds],
-    link_args: [
-        '-Wl,--version-script=@0@'.format(enclave_lds[0].full_path()),
-    ],
-    dependencies: [sgx_trts],
-    name_prefix: '',
-    name_suffix: 'so',
-)
-
-enclave_pem = custom_target(
-    command: ['openssl', 'genrsa', '-out', '@OUTPUT@', '-3', '3072'],
-    output: 'enclave_test.pem',
-)
-
-signed_enclave = custom_target('signed-enclave',
-    command: [
-        sgx_sign, 'sign',
-        '-key', enclave_pem,
-        '-config', files('enclave.config.xml'),
-        '-enclave', '@INPUT@',
-        '-out', '@OUTPUT@',
-    ],
-    input: enclave,
-    output: 'enclave.signed.so',
-)
-
-# # # # # # # # # # # #
-# CHANLLENGE ENCLAVE  #
-
-subdir('desafio')
+signed_enclave = fs.copyfile(files('enclave.signed.so'))

@@ -46,6 +46,20 @@ void ocall_print_string(const char *str) {
     printf("%s", str);
 }
 
+/**
+ * OCALL que será chamada 20x pela ecall `ecall_pedra_papel_tesoura`,
+ * recebe como parametro o round atual, contando a partir do 1, até 20.
+ * Essa função DEVE retornar 0 (pedra), 1 (papel) ou 2 (tesoura), caso
+ * contrário o enclave aborta imediatamente.
+ *
+ * DICA: utilize variáveis estáticas se precisar persistir um estado entre
+ *       chamadas a essa função.
+ **/
+unsigned ocall_pedra_papel_tesoura(unsigned int round) {
+    (void) round;
+    return 0;
+}
+
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[]) {
     int status;
