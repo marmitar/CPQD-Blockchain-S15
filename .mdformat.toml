@@ -1,0 +1,28 @@
+## See https://mdformat.readthedocs.io/en/stable/users/configuration_file.html
+wrap = 120
+number = true
+end_of_line = "lf"
+validate = true
+## FIXME: not available on Python 3.12
+# exclude = ["LICENSE.md"]
+
+## See https://mdformat.readthedocs.io/en/stable/users/plugins.html
+codeformatters = [
+  # from https://github.com/hukkin/mdformat-config
+  "json",
+  "toml",
+  "yaml",
+  # https://github.com/hukkin/mdformat-shfmt
+  "bash",
+  "sh",
+]
+extensions = [
+  # https://github.com/executablebooks/mdformat-footnote
+  "footnote",
+  # https://github.com/hukkin/mdformat-gfm
+  "gfm",
+  # https://github.com/KyleKing/mdformat-gfm-alerts
+  "gfm_alerts",
+  # https://github.com/executablebooks/mdformat-myst
+  "myst",
+]

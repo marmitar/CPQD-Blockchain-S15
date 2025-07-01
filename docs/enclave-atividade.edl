@@ -27,7 +27,7 @@ enclave {
         /*
          * DESAFIO 4: essa função retorna ((x*x*a) + (x*b) + c) % 2147483647
          * assume que: 10^-8 > (a + b + c) < 10^8
-         * 
+         *
          * Use essa função para ti auxiliar a descobrir os polinomios
          * chamando `ecall_verificar_polinomio`.
          * OBS: Essa ecall aborta se vc passar zero.
@@ -43,7 +43,7 @@ enclave {
     };
 
     untrusted {
-        /* 
+        /*
          * Essa ocall precisa que o método `ocall_print_string` esteja
          * implementado no app.
          */

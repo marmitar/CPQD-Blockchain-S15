@@ -1,0 +1,49 @@
+# See https://pre-commit.com for more information
+default_install_hook_types:
+  - commit-msg
+  - pre-commit
+  - pre-push
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # plaintext fixers
+      - id: trailing-whitespace
+        exclude: '\.log$'
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+        args: [--fix, lf]
+      # config syntax checkers
+      - id: check-yaml
+      - id: check-toml
+      # filesystems checkers
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+
+  # Markdown formatter
+  - repo: https://github.com/hukkin/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        # https://mdformat.readthedocs.io/en/stable/users/plugins.html
+        additional_dependencies:
+          - mdformat-config
+          - mdformat-footnote
+          - mdformat-gfm
+          - mdformat-gfm-alerts
+          - mdformat-ruff
+          - mdformat-shfmt
+          - mdformat-myst
+        exclude: 'LICENSE\.md'
+
+  # C formatter
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format
+        language: system
+        entry: ninja -C build clang-format
+        files: .*\.(c|cpp|h|hpp)$
+        pass_filenames: false

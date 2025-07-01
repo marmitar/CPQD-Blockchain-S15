@@ -1,8 +1,8 @@
 /* Enclave.edl - Top EDL file. */
 enclave {
     /* Import ECALL/OCALL from sub-directory EDLs or from SGX-SDK.
-     *  [from]: specifies the location of EDL file. 
-     *  [import]: specifies the functions to import, 
+     *  [from]: specifies the location of EDL file.
+     *  [import]: specifies the functions to import,
      *  [*]: implies to import all functions.
      */
     from "sgx_tstdc.edl" import *;
@@ -10,7 +10,7 @@ enclave {
     trusted {
         /*
          * [string]:
-         *      the attribute tells Edger8r 'str' is NULL terminated string, so strlen 
+         *      the attribute tells Edger8r 'str' is NULL terminated string, so strlen
          *      will be used to count the length of buffer pointed by 'str'.
          * [const]:
          *      the attribute tells Edger8r the buffer pointed by 'str' cannot be modified,
@@ -35,8 +35,8 @@ enclave {
          * O enclave irá substituir as palavras erradas pelo caracter '-' e
          * ira manter as que você acertou.
          * retorna 0 se você acerta a palavra, e negativo caso contrário.
-         * 
-         * DICA: A palavra secreta possui apenas letras maisculas sem 
+         *
+         * DICA: A palavra secreta possui apenas letras maisculas sem
          *       espaços, acentuação e numeros.
          */
         public int ecall_palavra_secreta([in, out] char palavra[20]);
@@ -44,7 +44,7 @@ enclave {
         /*
          * DESAFIO 4: essa função retorna ((x*x*a) + (x*b) + c) % 2147483647
          * assuma que: -10^8 < (a + b + c) < 10^8
-         * 
+         *
          * Use essa função para ti auxiliar a descobrir os polinomios
          * chamando `ecall_verificar_polinomio`.
          * OBS: Essa ecall aborta se vc passar zero.
@@ -68,7 +68,7 @@ enclave {
          * Funcionamento:
          *   1 - O enclave escolhe entre pedra (0), papel (1) e teoura (2).
          *   2 - O enclave SEMPRE faz a mesma jogada no primeiro round.
-         *   3 - O enclave chama `ocall_pedra_papel_tesoura` passando como 
+         *   3 - O enclave chama `ocall_pedra_papel_tesoura` passando como
          *       parametro o numero do round atual, contando 1, 2, 3... até 20.
          *   4 - O enclave compara as duas jogadas, se você ganhou, ele incrementa
          *.      o contador de vitorias (ou de derrotas do enclave).
@@ -82,7 +82,7 @@ enclave {
          *   valor diferente de 0 (pedra), 1 (papel) ou 2 (tesoura).
          * - O enclave aborta se `ocall_pedra_papel_tesoura` falhar ou abortar.
          *
-         * DICA: A estratégia do enclave é deterministica, ele sempre faz as mesmas jogadas 
+         * DICA: A estratégia do enclave é deterministica, ele sempre faz as mesmas jogadas
          *       enquanto o resultado dos rounds anteriores for o mesmo.
          **/
         public int ecall_pedra_papel_tesoura(void);
@@ -93,7 +93,7 @@ enclave {
          * OCALL chamada pelo enclave para imprimir algum texto no terminal.
          **/
         void ocall_print_string([in, string] const char *str);
-        
+
         /**
          * OCALL que será chamada 20x pela ecall `ecall_pedra_papel_tesoura`,
          * recebe como parametro o round atual, contando a partir do 1, até 20.

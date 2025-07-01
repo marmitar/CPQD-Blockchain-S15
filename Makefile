@@ -76,7 +76,7 @@ ifeq ($(SGX_MODE), HW)
 ifneq ($(SGX_DEBUG), 1)
 ifneq ($(SGX_PRERELEASE), 1)
     # Choose to use 'enclave.lds' for HW release mode
-    ENCLAVE_VERSION_SCRIPT = enclave/enclave.lds 
+    ENCLAVE_VERSION_SCRIPT = enclave/enclave.lds
 endif
 endif
 endif
@@ -93,7 +93,7 @@ CRYPTO_LIBRARY_NAME := sgx_tcrypto
 ENCLAVE_SRCS := enclave/enclave.c
 ENCLAVE_OBJS := $(ENCLAVE_SRCS:.c=.o)
 ENCLAVE_HEADERS := enclave/enclave.h
-ENCLAVE_INCLUDE_PATHS := -Ienclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc 
+ENCLAVE_INCLUDE_PATHS := -Ienclave -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc
 
 ENCLAVE_CFLAGS := -nostdinc -fvisibility=hidden -fpie -fstack-protector -fno-builtin-printf $(ENCLAVE_INCLUDE_PATHS)
 
@@ -238,4 +238,3 @@ format:
         	-nbad -bap -nbc -br -bli2 -bls -ncdb -nce -cs -di2 -ndj -nfc1 --no-tabs \
         	-i4 -ip5 -lp -npcs -psl -nsc -nsob -bbo -cp1 -nfca -hnl -npsl --indent-label0; \
 	done
-
