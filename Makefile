@@ -39,7 +39,7 @@ SGX_CFLAGS += -Wall -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
                     -Wmissing-include-dirs -Wfloat-equal -Wundef -Wshadow \
                     -Wcast-align -Wcast-qual -Wconversion -Wredundant-decls \
 					-Wjump-misses-init -Wstrict-prototypes -Wunsuffixed-float-constants \
-					-std=c99
+					-std=c23
 
 ######## App Settings ########
 

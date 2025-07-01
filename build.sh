@@ -30,7 +30,7 @@ declare -a SGX_CFLAGS=(
     -Wmissing-include-dirs -Wfloat-equal -Wundef -Wshadow
     -Wcast-align -Wcast-qual -Wconversion -Wredundant-decls
     -Wjump-misses-init -Wstrict-prototypes -Wunsuffixed-float-constants
-    '-std=c99'
+    '-std=c23'
 )
 declare -a APP_CFLAGS=(
    -fPIC -Wno-attributes -IApp "-I${SGX_SDK}/include" -DNDEBUG -UEDEBUG -UDEBUG

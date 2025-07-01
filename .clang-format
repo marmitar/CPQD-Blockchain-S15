@@ -163,11 +163,11 @@ InsertBraces:    true
 InsertNewlineAtEOF: true
 InsertTrailingCommas: Wrapped
 IntegerLiteralSeparator:
-  Binary:          0
+  Binary:          4
   BinaryMinDigits: 6
-  Decimal:         0
+  Decimal:         3
   DecimalMinDigits: 5
-  Hex:             0
+  Hex:             2
   HexMinDigits:    5
 JavaScriptQuotes: Double
 JavaScriptWrapImports: true

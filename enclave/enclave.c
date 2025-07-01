@@ -1,3 +1,9 @@
+// clang-format off
+#if __STDC_VERSION__ < 202300L
+#error "This code is compliant with C23 or later only."
+#endif
+// clang-format on
+
 #include <stdarg.h>
 #include <stdio.h>  /* vsnprintf */
 #include <string.h> /* vsnprintf */
