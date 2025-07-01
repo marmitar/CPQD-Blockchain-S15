@@ -8,6 +8,7 @@ Checks: '
   -modernize-use-nullptr,
   -modernize-macro-to-enum,
   bugprone-*,
+
   cert-*-c,
   concurrency-*,
   misc-confusable-identifiers,
@@ -57,6 +58,7 @@ CheckOptions:
     bits/types/struct_timeval.h'
   bugprone-easily-swappable-parameters.QualifiersMix: false
   bugprone-easily-swappable-parameters.ModelImplicitConversions: false
+  bugprone-easily-swappable-parameters.MinimumLength: 3
   cert-dcl16-c.NewSuffixes: 'L;LL;LU;LLU'
   cert-err33-c.AllowCastToVoid: true
   cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField: false

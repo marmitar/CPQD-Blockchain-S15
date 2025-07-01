@@ -229,13 +229,15 @@ static uint8_t desafio_5_wins(void) {
     abort();
 }
 
-static unsigned desafio_5_find_partial_solution(uint8_t s, bool init) {
-    for (unsigned i = s + 1; i < ROUNDS; i++) {
-        desafio_5_answers[i] = init ? (i + s) % 3 : 0;
+static unsigned desafio_5_find_partial_solution(uint8_t s, uint8_t init(uint8_t i, uint8_t s)) {
+    if (init != NULL) {
+        for (uint8_t i = s; i < ROUNDS; i++) {
+            desafio_5_answers[i] = init(i, s);
+        }
     }
     uint8_t w0 = desafio_5_wins();
 
-    unsigned total = 0;
+    unsigned total = w0;
     for (uint8_t i = ROUNDS; i > s; i--) {
         const uint8_t vi = desafio_5_answers[i - 1];
 
@@ -264,6 +266,24 @@ static unsigned desafio_5_find_partial_solution(uint8_t s, bool init) {
     return total;
 }
 
+static uint8_t zero(uint8_t i, uint8_t s) {
+    (void) i;
+    (void) s;
+    return 0;
+}
+
+static uint8_t add(uint8_t i, uint8_t s) {
+    return (i + s - 1) % 3;
+}
+
+static uint8_t mul(uint8_t i, uint8_t s) {
+    return (i * s + 1) % 3;
+}
+
+static uint8_t sq(uint8_t i, uint8_t s) {
+    return (i * i + s * s) % 3;
+}
+
 /** Test all possible values for each position, and chose the one that increase wins locally. */
 static void desafio_5_find_solution(void) {
     enable_enclave_output = false;
@@ -273,7 +293,9 @@ static void desafio_5_find_solution(void) {
 
         for (uint8_t d = 0; d <= 2; d++) {
             desafio_5_answers[s] = d;
-            wt[d] = desafio_5_find_partial_solution(s, false) + desafio_5_find_partial_solution(s, true);
+            wt[d] = desafio_5_find_partial_solution(s + 1, zero) + desafio_5_find_partial_solution(s + 1, add)
+                + desafio_5_find_partial_solution(s + 1, mul) + desafio_5_find_partial_solution(s + 1, sq)
+                + desafio_5_find_partial_solution(s + 1, NULL);
         }
 
         if (wt[0] >= wt[1] && wt[0] >= wt[2]) {
@@ -284,6 +306,10 @@ static void desafio_5_find_solution(void) {
             desafio_5_answers[s] = 2;
         }
     }
+
+    printf("TRY AGAIN!\n");
+    desafio_5_find_partial_solution(0, NULL);
+
     enable_enclave_output = true;
 }
 
