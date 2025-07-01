@@ -229,7 +229,7 @@ static uint8_t desafio_5_wins(void) {
     abort();
 }
 
-static unsigned desafio_5_find_partial_solution(uint8_t s, uint8_t init(uint8_t i, uint8_t s)) {
+static unsigned desafio_5_greedy_solution(uint8_t s, uint8_t init(uint8_t i, uint8_t s)) {
     if (init != NULL) {
         for (uint8_t i = s; i < ROUNDS; i++) {
             desafio_5_answers[i] = init(i, s);
@@ -247,7 +247,6 @@ static unsigned desafio_5_find_partial_solution(uint8_t s, uint8_t init(uint8_t 
         desafio_5_answers[i - 1] = (vi + 2) % 3;
         const uint8_t w2 = desafio_5_wins();
 
-        printf("s=%hhu, v[i=%hhu]=%hhu, w0=%d, w1=%d, w2=%d\n", s, i - 1, vi, w0, w1, w2);
         if (w0 >= w1 && w0 >= w2) {
             desafio_5_answers[i - 1] = (vi + 0) % 3;
             // wins = wins;
@@ -284,31 +283,36 @@ static uint8_t sq(uint8_t i, uint8_t s) {
     return (i * i + s * s) % 3;
 }
 
+static unsigned desafio_5_limited_search(uint8_t s, uint8_t depth) {
+    if (depth == 0) {
+        return desafio_5_greedy_solution(s, zero) + desafio_5_greedy_solution(s, add)
+            + desafio_5_greedy_solution(s, mul) + desafio_5_greedy_solution(s, sq) + desafio_5_greedy_solution(s, NULL);
+    }
+
+    unsigned wt[3] = {0, 0, 0};
+    for (uint8_t d = 0; d <= 2; d++) {
+        desafio_5_answers[s] = d;
+        wt[d] = desafio_5_limited_search(s + 1, depth - 1);
+    }
+
+    if (wt[0] >= wt[1] && wt[0] >= wt[2]) {
+        desafio_5_answers[s] = 0;
+    } else if (wt[1] >= wt[2]) {
+        desafio_5_answers[s] = 1;
+    } else {
+        desafio_5_answers[s] = 2;
+    }
+
+    return wt[0] + wt[1] + wt[2];
+}
+
 /** Test all possible values for each position, and chose the one that increase wins locally. */
 static void desafio_5_find_solution(void) {
     enable_enclave_output = false;
 
     for (uint8_t s = 0; s < ROUNDS; s++) {
-        unsigned wt[3] = {0, 0, 0};
-
-        for (uint8_t d = 0; d <= 2; d++) {
-            desafio_5_answers[s] = d;
-            wt[d] = desafio_5_find_partial_solution(s + 1, zero) + desafio_5_find_partial_solution(s + 1, add)
-                + desafio_5_find_partial_solution(s + 1, mul) + desafio_5_find_partial_solution(s + 1, sq)
-                + desafio_5_find_partial_solution(s + 1, NULL);
-        }
-
-        if (wt[0] >= wt[1] && wt[0] >= wt[2]) {
-            desafio_5_answers[s] = 0;
-        } else if (wt[1] >= wt[2]) {
-            desafio_5_answers[s] = 1;
-        } else {
-            desafio_5_answers[s] = 2;
-        }
+        desafio_5_limited_search(s, 2);
     }
-
-    printf("TRY AGAIN!\n");
-    desafio_5_find_partial_solution(0, NULL);
 
     enable_enclave_output = true;
 }
