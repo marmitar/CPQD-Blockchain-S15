@@ -3,6 +3,7 @@
     "EditorConfig.EditorConfig",
     "llvm-vs-code-extensions.vscode-clangd",
     "mesonbuild.mesonbuild",
+    "mtib.vsgx",
     "vadimcn.vscode-lldb",
   ],
 }

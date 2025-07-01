@@ -31,6 +31,7 @@ builddir/
 **/*.la
 **/*.lo
 **/*.so
+!docs/*.so
 **/*.lib
 **/*.dylib
 *.valgrind

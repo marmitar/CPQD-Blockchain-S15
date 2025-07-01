@@ -1,0 +1,52 @@
+enclave {
+    from "sgx_tstdc.edl" import *;
+
+    trusted {
+        /*
+         * Código de exemplo
+         */
+        public int ecall_name_check([in, string] const char *name);
+
+        /*
+         * DESAFIO 1: Bastar chamar essa função passando o seu nome e sobrenome.
+         */
+        public int ecall_verificar_aluno([in, string] const char *nome);
+
+        /*
+         * DESAFIO 2: Descubra a senha.
+         * retorna 0 se você acerta a senha, e negativo caso contrário.
+         */
+        public int ecall_verificar_senha(unsigned int senha);
+
+        /*
+         * DESAFIO 3: Descubra a palavra secret.
+         * retorna 0 se você acerta a senha, e negativo caso contrário.
+         */
+        public int ecall_palavra_secreta([in, out] char palavra[20]);
+
+        /*
+         * DESAFIO 4: essa função retorna ((x*x*a) + (x*b) + c) % 2147483647
+         * assume que: 10^-8 > (a + b + c) < 10^8
+         * 
+         * Use essa função para ti auxiliar a descobrir os polinomios
+         * chamando `ecall_verificar_polinomio`.
+         * OBS: Essa ecall aborta se vc passar zero.
+         */
+        public int ecall_polinomio_secreto(int x);
+
+        /*
+         * DESAFIO 4: Verificar se os polinomios estão corretos.
+         * DICA: 10^-8 > (a + b + c) < 10^8
+         * DICA: essa função foi feita para ser difícil de quebrar utilizando força bruta.
+         */
+        public int ecall_verificar_polinomio(int a, int b, int c);
+    };
+
+    untrusted {
+        /* 
+         * Essa ocall precisa que o método `ocall_print_string` esteja
+         * implementado no app.
+         */
+        void ocall_print_string([in, string] const char *str);
+    };
+};
