@@ -12,6 +12,7 @@ if [ -z "${SGX_SDK}" ]; then
         exit 1
     fi
     # Load SGX-SDK variables and dev tools
+    # shellcheck source=/dev/null
     source /opt/intel/sgxsdk/environment
 fi
 
@@ -45,8 +46,8 @@ declare -a ENCLAVE_CFLAGS=(
     "-I${SGX_SDK}/include/tlibc"
 )
 declare -a ENCLAVE_LINK_FLAGS=(
-    -Wl,-z,relro,-z,now,-z,noexecstack
-    -Wl,--no-undefined
+    '-Wl,-z,relro,-z,now,-z,noexecstack'
+    '-Wl,--no-undefined'
     -nostdlib -nodefaultlibs -nostartfiles "-L${SGX_SDK}/lib64"
 	'-Wl,--whole-archive'
     -lsgx_trts_sim
@@ -79,8 +80,8 @@ declare -a GENERATED_FILES=(
 ###############
 
 # STEP 1: remove auto-generated files.
-rm -f ${GENERATED_FILES[@]}
- 
+rm -f "${GENERATED_FILES[@]}"
+
 # STEP 2: Generates interfaces between the untrusted components and enclaves.
 # output files:
 # - app/enclave_u.c
@@ -92,9 +93,9 @@ popd
 # STEP 3: Compilar APP.
 # output files:
 # - main
-$CC ${SGX_CFLAGS[@]} ${APP_CFLAGS[@]} -c app/enclave_u.c -o app/enclave_u.o
-$CC ${SGX_CFLAGS[@]} ${APP_CFLAGS[@]} -c app/error.c -o app/error.o
-$CC ${SGX_CFLAGS[@]} ${APP_CFLAGS[@]} -c app/app.c -o app/app.o
+$CC "${SGX_CFLAGS[@]}" "${APP_CFLAGS[@]}" -c app/enclave_u.c -o app/enclave_u.o
+$CC "${SGX_CFLAGS[@]}" "${APP_CFLAGS[@]}" -c app/error.c -o app/error.o
+$CC "${SGX_CFLAGS[@]}" "${APP_CFLAGS[@]}" -c app/app.c -o app/app.o
 $CC app/enclave_u.o app/error.o app/app.o -o main "-L${SGX_SDK}/lib64" -lsgx_urts_sim -lpthread
 
 ###################
@@ -112,9 +113,9 @@ popd
 # STEP 5: Compile ENCLAVE
 # output files:
 # - enclave.so
-$CC ${SGX_CFLAGS[@]} ${ENCLAVE_CFLAGS[@]} -c enclave/enclave_t.c -o enclave/enclave_t.o
-$CC ${SGX_CFLAGS[@]} ${ENCLAVE_CFLAGS[@]} -c enclave/enclave.c -o enclave/enclave.o
-$CC enclave/enclave_t.o enclave/enclave.o -o enclave.so ${ENCLAVE_LINK_FLAGS[@]}
+$CC "${SGX_CFLAGS[@]}" "${ENCLAVE_CFLAGS[@]}" -c enclave/enclave_t.c -o enclave/enclave_t.o
+$CC "${SGX_CFLAGS[@]}" "${ENCLAVE_CFLAGS[@]}" -c enclave/enclave.c -o enclave/enclave.o
+$CC enclave/enclave_t.o enclave/enclave.o -o enclave.so "${ENCLAVE_LINK_FLAGS[@]}"
 
 ################
 # SIGN ENCLAVE #

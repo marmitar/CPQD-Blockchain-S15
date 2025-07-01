@@ -137,7 +137,7 @@ exec_cmd 'make preparation'
 if [[ "${USE_OPT_LIBS}" == '0' || "${USE_OPT_LIBS}" == '1' ]]; then
     # Compile o SGX-SDK
     exec_cmd "sudo make sdk -j$(nproc) DEBUG='${DEBUG}' USE_OPT_LIBS='${USE_OPT_LIBS}'"
-    
+
     # Compile Intel SGX installer
     # Obs: compiling with -j1, because protobuf sometimes fails when building in parallel.
     echo "sudo make sdk_install_pkg -j1 DEBUG='${DEBUG}'"
@@ -145,7 +145,7 @@ if [[ "${USE_OPT_LIBS}" == '0' || "${USE_OPT_LIBS}" == '1' ]]; then
 else
     # Compile o SGX-SDK
     exec_cmd "make sdk_no_mitigation -j$(nproc) DEBUG='${DEBUG}' USE_OPT_LIBS='${USE_OPT_LIBS}'"
-    
+
     # Compile Intel SGX installer
     # Obs: compiling with -j1, because protobuf sometimes fails when building in parallel.
     echo "make sdk_install_pkg -j1 DEBUG='${DEBUG}'"
@@ -153,7 +153,8 @@ else
 fi
 
 # Extract SGX-SDK version
-export SGX_SDK_VERSION="$(cat ./common/inc/internal/se_version.h | grep '#define STRFILEVER' | awk  '{print $3}' | tr -d \")"
+SGX_SDK_VERSION="$(grep '#define STRFILEVER' ./common/inc/internal/se_version.h | awk  '{print $3}' | tr -d \")"
+export SGX_SDK_VERSION
 printf "${bold_color}SGX SDK version: ${green_color}%s${reset_color}\n" "${SGX_SDK_VERSION}"
 
 # Exec the installer at ./linux/installer/bin/sgx_linux_x64_sdk_XXXXXXXX.bin
@@ -166,6 +167,7 @@ printf 'sudo %s\n' "./linux/installer/bin/sgx_linux_x64_sdk_${SGX_SDK_VERSION}.b
 printf "n\n%s\n" "${SGX_SDK_DIR}" | sudo ./linux/installer/bin/"sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin"
 
 # Load SGX-SDK environment variables
+# shellcheck source=/dev/null
 source "${SGX_SDK_DIR}/sgxsdk/environment" || die "failed to load sdk env: '${SGX_SDK_DIR}/sgxsdk/environment'"
 
 # Compile and run example code using Simulation Mode
@@ -177,13 +179,17 @@ pushd bin > /dev/null 2>&1 || die "directory not found: '$(pwd)/bin'"
 ./app > /dev/null 2>&1 || die "sgx example code failed: '$(pwd)/app'"
 
 # SUCCESS, print configuration options
+# shellcheck disable=SC2059
 printf "\n${bold_color}${green_color}SGX SDK installed succesfully!${reset_color}\n\n"
 printf 'if you wish to load sgx-sdk tools automatically, run following command:\n'
 if [ -e ~/.zshenv ]; then
+    # shellcheck disable=SC2088
     SHELL_ENV_FILE='~/.zshenv'
 elif [ -e ~/.zshrc ]; then
+    # shellcheck disable=SC2088
     SHELL_ENV_FILE='~/.zshrc'
 else
+    # shellcheck disable=SC2088
     SHELL_ENV_FILE='~/.bashrc'
 fi
 printf "${bold_color}echo %s${reset_color}\n" \
