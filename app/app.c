@@ -229,8 +229,14 @@ static uint8_t desafio_5_wins(void) {
     abort();
 }
 
-static uint8_t desafio_5_find_partial_solution(uint8_t j, uint8_t w0) {
-    for (uint8_t i = ROUNDS; i >= j; i--) {
+static unsigned desafio_5_find_partial_solution(uint8_t s, bool init) {
+    for (unsigned i = s + 1; i < ROUNDS; i++) {
+        desafio_5_answers[i] = init ? (i + s) % 3 : 0;
+    }
+    uint8_t w0 = desafio_5_wins();
+
+    unsigned total = 0;
+    for (uint8_t i = ROUNDS; i > s; i--) {
         const uint8_t vi = desafio_5_answers[i - 1];
 
         desafio_5_answers[i - 1] = (vi + 1) % 3;
@@ -239,7 +245,7 @@ static uint8_t desafio_5_find_partial_solution(uint8_t j, uint8_t w0) {
         desafio_5_answers[i - 1] = (vi + 2) % 3;
         const uint8_t w2 = desafio_5_wins();
 
-        printf("j=%hhu, v[i=%hhu]=%hhu, w0=%d, w1=%d, w2=%d\n", j - 1, i - 1, vi, w0, w1, w2);
+        printf("s=%hhu, v[i=%hhu]=%hhu, w0=%d, w1=%d, w2=%d\n", s, i - 1, vi, w0, w1, w2);
         if (w0 >= w1 && w0 >= w2) {
             desafio_5_answers[i - 1] = (vi + 0) % 3;
             // wins = wins;
@@ -250,41 +256,34 @@ static uint8_t desafio_5_find_partial_solution(uint8_t j, uint8_t w0) {
             // desafio_5_answers[i-1] = (v + 2) % 3;
             w0 = w2;
         }
+
+        total += w0;
+        total += w1;
+        total += w2;
     }
-    return w0;
+    return total;
 }
 
 /** Test all possible values for each position, and chose the one that increase wins locally. */
 static void desafio_5_find_solution(void) {
     enable_enclave_output = false;
 
-    for (unsigned i = 0; i < ROUNDS; i++) {
-        desafio_5_answers[i] = 0;
-    }
+    for (uint8_t s = 0; s < ROUNDS; s++) {
+        unsigned wt[3] = {0, 0, 0};
 
-    uint8_t w = desafio_5_wins();
-    for (uint8_t j = ROUNDS; j > 0; j--) {
-        const uint8_t vj = desafio_5_answers[j - 1];
+        for (uint8_t d = 0; d <= 2; d++) {
+            desafio_5_answers[s] = d;
+            wt[d] = desafio_5_find_partial_solution(s, false) + desafio_5_find_partial_solution(s, true);
+        }
 
-        const uint8_t w0 = desafio_5_find_partial_solution(j, w);
-
-        desafio_5_answers[j - 1] = (vj + 1) % 3;
-        const uint8_t w1 = desafio_5_find_partial_solution(j, w0);
-
-        desafio_5_answers[j - 1] = (vj + 2) % 3;
-        const uint8_t w2 = desafio_5_find_partial_solution(j, w1);
-
-        if (w2 >= w1 && w2 >= w0) {
-            w = w2;
-        } else if (w1 >= w0) {
-            desafio_5_answers[j - 1] = (vj + 1) % 3;
-            w = desafio_5_find_partial_solution(j, w2);
+        if (wt[0] >= wt[1] && wt[0] >= wt[2]) {
+            desafio_5_answers[s] = 0;
+        } else if (wt[1] >= wt[2]) {
+            desafio_5_answers[s] = 1;
         } else {
-            desafio_5_answers[j - 1] = (vj + 0) % 3;
-            w = desafio_5_find_partial_solution(j, w2);
+            desafio_5_answers[s] = 2;
         }
     }
-
     enable_enclave_output = true;
 }
 
@@ -351,7 +350,6 @@ int SGX_CDECL main(void) {
         }
         printf("%u", desafio_5_answers[i]);
     }
-    printf("]\n");
 
     ret = ecall_pedra_papel_tesoura(global_eid, &status);
     if (ret != SGX_SUCCESS) {
@@ -359,6 +357,7 @@ int SGX_CDECL main(void) {
         abort();
     }
     ok = ok && (status == ROUNDS);
+    printf("], wins = %d\n", status);
 
     /* Destroy the enclave */
     ret = sgx_destroy_enclave(global_eid);
