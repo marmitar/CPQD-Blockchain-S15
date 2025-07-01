@@ -36,7 +36,7 @@ sgx_trts = declare_dependency(
         '-fpie',
         '-fstack-protector',
         '-fno-builtin-printf',
-        '-fno-trapv',
+        '-fwrapv', # SGX doesn't support trapping math
     ],
     link_args: [
         '-Wl,-z,relro,-z,now,-z,noexecstack',

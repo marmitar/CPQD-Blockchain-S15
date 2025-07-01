@@ -51,13 +51,13 @@ if warning_level >= 1
         '-Wcast-qual',
         '-Wconversion',
         '-Wredundant-decls',
-        '-Wjump-misses-init',
         '-Wstrict-prototypes',
-        '-Wunsuffixed-float-constants',
         cc.get_supported_arguments('-Wformat-truncation=2').get(0, '-Wformat-truncation'),
         cc.get_supported_arguments('-Wformat-overflow=2').get(0, '-Wformat-overflow'),
         checked: 'warn',
     ) + cc.get_supported_arguments(
+        '-Wjump-misses-init', # GCC only
+        '-Wunsuffixed-float-constants', # GCC only
         '-Wstringop-overflow=4', # GCC only
         '-Wno-nullability-extension', # Clang only
         checked: 'off',
@@ -100,11 +100,11 @@ if optimizations_enabled
         '-ffunction-sections',
         '-fno-exceptions',
         '-fno-math-errno',
-        '-fno-signaling-nans',
         '-fno-trapping-math',
         checked: 'warn',
     ) + cc.get_supported_arguments(
         get_option('b_lto_mode') == 'default' ? '-flto=full' : [], # Clang only
+        '-fno-signaling-nans', # GCC only
         '-fallow-store-data-races', # GCC only
         '-fwhole-program', # GCC only
         checked: 'off',
