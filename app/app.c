@@ -217,7 +217,7 @@ extern void desafio_5_find_solution(void) {
     enable_enclave_output = false;
 
     for (unsigned i = 0; i < ROUNDS; i++) {
-        desafio_5_answers[i] = i % 3;
+        desafio_5_answers[i] = 0 % 3;
     }
 
     int wins = -1;
@@ -232,13 +232,14 @@ extern void desafio_5_find_solution(void) {
         return;
     }
 
+    unsigned unmodified = 0;
     while (wins < ROUNDS) {
         uint8_t modified = 0;
 
-        for (unsigned i = 0; i < ROUNDS; i++) {
-            const uint8_t v = desafio_5_answers[i];
+        for (unsigned i = ROUNDS; i > 0; i--) {
+            const uint8_t v = desafio_5_answers[i - 1];
 
-            desafio_5_answers[i] = (v + 1) % 3;
+            desafio_5_answers[i - 1] = (v + 1) % 3;
             int wins1 = -1;
             ret = ecall_pedra_papel_tesoura(global_eid, &wins1);
             if (ret != SGX_SUCCESS) {
@@ -246,7 +247,7 @@ extern void desafio_5_find_solution(void) {
                 abort();
             }
 
-            desafio_5_answers[i] = (v + 2) % 3;
+            desafio_5_answers[i - 1] = (v + 2) % 3;
             int wins2 = -1;
             ret = ecall_pedra_papel_tesoura(global_eid, &wins2);
             if (ret != SGX_SUCCESS) {
@@ -254,26 +255,28 @@ extern void desafio_5_find_solution(void) {
                 abort();
             }
 
-            printf("v[i=%u]=%hhu, wins=%d, wins1=%d, wins2=%d\n", i, v, wins, wins1, wins2);
-            if (wins > wins1 && wins > wins2) {
-                desafio_5_answers[i] = v;
+            printf("v[i=%u]=%hhu, wins=%d, wins1=%d, wins2=%d\n", i - 1, v, wins, wins1, wins2);
+            if (wins >= wins1 && wins >= wins2) {
+                desafio_5_answers[i - 1] = v;
                 // wins = wins;
             } else if (wins1 > wins2) {
-                desafio_5_answers[i] = (v + 1) % 3;
+                desafio_5_answers[i - 1] = (v + 1) % 3;
                 wins = wins1;
                 modified++;
             } else {
-                // desafio_5_answers[i] = (v + 2) % 3;
+                // desafio_5_answers[i-1] = (v + 2) % 3;
                 wins = wins2;
                 modified++;
             }
         }
 
         if (modified == 0) {
+            unmodified++;
             for (unsigned i = 0; i < ROUNDS; i++) {
-                desafio_5_answers[i] = (desafio_5_answers[i] + 1) % 3;
+                desafio_5_answers[i] = (desafio_5_answers[i] + unmodified) % 3;
             }
         }
+        printf("modified = %hhu, unmodified = %u\n", modified, unmodified);
     }
 
     enable_enclave_output = true;
