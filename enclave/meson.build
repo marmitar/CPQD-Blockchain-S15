@@ -114,10 +114,15 @@ enclave = shared_library('enclave',
     name_suffix: 'so',
 )
 
+enclave_pem = custom_target(
+    command: ['openssl', 'genrsa', '-out', '@OUTPUT@', '-3', '3072'],
+    output: 'enclave_test.pem',
+)
+
 signed_enclave = custom_target('signed-enclave',
     command: [
         sgx_sign, 'sign',
-        '-key', 'enclave_private_test.pem',
+        '-key', enclave_pem,
         '-config', files('enclave.config.xml'),
         '-enclave', '@INPUT@',
         '-out', '@OUTPUT@',

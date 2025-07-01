@@ -4,62 +4,41 @@ Minimal `C` project intended to be used as template project to get started with 
 
 ## Building
 
-First make sure you have the latest [linux-sgx-sdk](https://github.com/intel/linux-sgx) installed, you can follow the instructions on their github page, or simply run:
-```bash
-# Clone the project
-git clone https://github.com/Lohann/intel-sgx-template.git
-cd intel-sgx-template
-
-# Install Linux SGX-SDK, obs: only tested on Ubuntu 24.04
-./install-sgx-sdk.sh
-```
-
-Make sure you have dev tools enabled in your terminal
-```shell
-# First make sure SGX-SDK environment is set
-[ -z "$SGX_SDK" ] && source /opt/intel/sgxsdk/environment
-```
+First make sure you have the latest [linux-sgx-sdk](https://github.com/intel/linux-sgx) installed, you can follow the instructions on their github page.
 
 To compile APP and/or ENCLAVE, use one of the following options:
 ```bash
-# Options:
-#   SGX_MODE=HW     -> Hardware Mode (default) obs: requires compatible CPU
-#   SGX_MODE=SIM    -> Simulation Mode
-#   SGX_DEBUG=1     -> Enable Debug (default)
-#   SGX_DEBUG=0     -> Disable Debug
+# Prepare meson
+meson setup build
 
-# Compile APP and ENCLAVE in Hardware+Debug mode
-make
+# Compile APP and ENCLAVE in Simulation+Release mode
+meson compile -C build
 
-# Compile ONLY the APP in Hardware+Debug mode
-make main
+# Compile ONLY the APP in Simulation+Release mode
+meson compile -C build app
 
-# Compile ONLY the ENCLAVE in Hardware+Debug mode
-make enclave.signed.so
+# Switch to Hardware+Debug mode
+meson configure --buildtype debugoptimized --debug -D sgx_mode=hw build
 
-# Compile APP in Simulated+Debug Mode
-make SGX_MODE=SIM main
-
-# Compile APP and ENCLAVE in Simulation+Release Mode
-make SGX_MODE=SIM SGX_DEBUG=0
-
-# Compile ENCLAVE in Hardware+Release Mode
-make SGX_DEBUG=0 enclave.signed.so
+# Compile ENCLAVE in Hardware+Debug Mode
+make compile -C build signed-enclave
 ```
 
-Format the code using [GNU indent](https://www.gnu.org/software/indent/manual/indent.html)
+Format the code using [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
 ```shell
-make format
+ninja -C build clang-format
 ```
 
 Run the App
 ```shell
-./main
+meson test -C build
 ```
 
-Remove generated files + Compile APP in Simulation Mode + Run app
+Or manually
 ```shell
-make clean && make SGX_MODE=SIM && ./main
+ln -sf build/enclave/enclave.signed.so .
+source /opt/intel/sgxsdk/environment
+build/app/app
 ```
 
 ## Check SGX Hardware Support
