@@ -1,4 +1,5 @@
 #include "error.h"
+#include "sgx_error.h"
 #include <stdio.h>
 
 /* Error code returned by sgx_create_enclave */

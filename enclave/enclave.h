@@ -1,8 +1,7 @@
-#ifndef _ENCLAVE_H_
-#define _ENCLAVE_H_
+#ifndef ENCLAVE_H
+#define ENCLAVE_H
 
 #include <assert.h>
-#include <stdlib.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -14,4 +13,4 @@ extern "C" {
 }
 #endif
 
-#endif /* !_ENCLAVE_H_ */
+#endif /* !ENCLAVE_H */

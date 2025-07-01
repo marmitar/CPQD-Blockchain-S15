@@ -47,3 +47,13 @@ repos:
         entry: ninja -C build clang-format
         files: .*\.(c|cpp|h|hpp)$
         pass_filenames: false
+
+  # C linter
+  - repo: local
+    hooks:
+      - id: clang-tidy
+        name: clang-tidy
+        language: system
+        entry: ninja -C build clang-tidy
+        files: .*\.(c|cpp|h|hpp)$
+        pass_filenames: false

@@ -6,15 +6,16 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
-#include <pwd.h>
-#include <unistd.h>
 #define MAX_PATH FILENAME_MAX
 
 #include "app.h"
 #include "enclave_u.h"
 #include "error.h"
+#include "sgx_defs.h"
+#include "sgx_eid.h"
+#include "sgx_error.h"
 #include "sgx_urts.h"
 
 /* Global EID shared by multiple threads */
@@ -56,7 +57,7 @@ int SGX_CDECL main(int argc, char *argv[]) {
     /* Initialize the enclave */
     if (initialize_enclave() < 0) {
         printf("Enter a character before exit ...\n");
-        getchar();
+        (void) getchar();
         return -1;
     }
 

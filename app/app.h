@@ -1,13 +1,10 @@
-#ifndef _APP_H_
-#define _APP_H_
+#ifndef APP_H
+#define APP_H
 
 #include <assert.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-#include "sgx_eid.h"   /* sgx_enclave_id_t */
-#include "sgx_error.h" /* sgx_status_t */
+#include "sgx_eid.h" /* sgx_enclave_id_t */
 
 #ifndef TRUE
 #    define TRUE 1
@@ -33,4 +30,4 @@ extern "C" {
 }
 #endif
 
-#endif /* !_APP_H_ */
+#endif /* !APP_H */
