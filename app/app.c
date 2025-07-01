@@ -189,6 +189,12 @@ static struct coeff desafio_4_coefficients(void) {
     return (struct coeff) {.a = a, .b = b, .c = c};
 }
 
+/* CHALLENGE 5 */
+
+#define ROUNDS 20
+
+static uint8_t desafio_5_answers[ROUNDS] = {0};
+
 /**
  * OCALL que será chamada 20x pela ecall `ecall_pedra_papel_tesoura`,
  * recebe como parametro o round atual, contando a partir do 1, até 20.
@@ -199,8 +205,69 @@ static struct coeff desafio_4_coefficients(void) {
  *       chamadas a essa função.
  **/
 extern unsigned ocall_pedra_papel_tesoura(unsigned int round) {
-    (void) round;
-    return 0;
+    if (round < 1 || round > ROUNDS) {
+        (void) fprintf(stderr, "Error: invalid input round: %u\n", round);
+        abort();
+    }
+    return desafio_5_answers[round - 1];
+}
+
+/** Test all possible values for each position, and chose the one that increase wins locally. */
+extern void desafio_5_find_solution(void) {
+    enable_enclave_output = false;
+
+    for (unsigned i = 0; i < ROUNDS; i++) {
+        desafio_5_answers[i] = 0;
+    }
+
+    int wins = -1;
+    sgx_status_t ret = ecall_pedra_papel_tesoura(global_eid, &wins);
+    if (ret != SGX_SUCCESS) {
+        print_error_message(ret);
+        abort();
+    }
+
+    if (wins < 0) {
+        enable_enclave_output = true;
+        return;
+    }
+
+    for (unsigned i = 0; i < ROUNDS; i++) {
+        desafio_5_answers[i] = 1;
+
+        int wins1 = -1;
+        ret = ecall_pedra_papel_tesoura(global_eid, &wins1);
+        if (ret != SGX_SUCCESS) {
+            print_error_message(ret);
+            abort();
+        }
+
+        if (wins1 > wins) {
+            wins = wins1;
+            // printf("v[i=%u]=%u, wins=%d, wins1=%d, wins2=%d\n", i, desafio_5_answers[i], wins, wins1, -1);
+            continue;
+        }
+
+        desafio_5_answers[i] = 2;
+
+        int wins2 = -1;
+        ret = ecall_pedra_papel_tesoura(global_eid, &wins2);
+        if (ret != SGX_SUCCESS) {
+            print_error_message(ret);
+            abort();
+        }
+
+        if (wins2 > wins) {
+            wins = wins2;
+            // printf("v[i=%u]=%u, wins=%d, wins1=%d, wins2=%d\n", i, desafio_5_answers[i], wins, wins1, wins2);
+            continue;
+        }
+
+        desafio_5_answers[i] = 0;
+        // printf("v[i=%u]=%u, wins=%d, wins1=%d, wins2=%d\n", i, desafio_5_answers[i], wins, wins1, wins2);
+    }
+
+    enable_enclave_output = true;
 }
 
 /* Application entry */
@@ -256,6 +323,24 @@ int SGX_CDECL main(void) {
         abort();
     }
     ok = ok && (status != 0);
+
+    /* DESAFIO 5: ecall_pedra_papel_tesoura */
+    desafio_5_find_solution();
+    printf("Info: Pedra-papel-tesoura = [");
+    for (unsigned i = 0; i < ROUNDS; i++) {
+        if (i > 0) {
+            printf(" ");
+        }
+        printf("%u", desafio_5_answers[i]);
+    }
+    printf("]\n");
+
+    ret = ecall_pedra_papel_tesoura(global_eid, &status);
+    if (ret != SGX_SUCCESS) {
+        print_error_message(ret);
+        abort();
+    }
+    ok = ok && (status == ROUNDS);
 
     /* Destroy the enclave */
     ret = sgx_destroy_enclave(global_eid);
