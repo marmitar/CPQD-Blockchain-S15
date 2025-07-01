@@ -5,6 +5,7 @@
 // clang-format on
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,12 +21,12 @@
 #endif
 
 /* Global EID shared by multiple threads */
-sgx_enclave_id_t global_eid = 0;
+static sgx_enclave_id_t global_eid = 0;
 
 /* Initialize the enclave:
  *   Call sgx_create_enclave to initialize an enclave instance
  */
-int initialize_enclave(void) {
+static int initialize_enclave(void) {
     /* Call sgx_create_enclave to initialize an enclave instance */
     /* Debug Support: set 2nd parameter to 1 */
     sgx_status_t ret = sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, NULL, NULL, &global_eid, NULL);
@@ -37,12 +38,17 @@ int initialize_enclave(void) {
     return 0;
 }
 
+/** Allow ecall output temporarily. */
+static bool enable_output = true;
+
 /* OCall functions */
-void ocall_print_string(const char *str) {
+extern void ocall_print_string(const char *str) {
     /* Proxy/Bridge will check the length and null-terminate
      * the input string to prevent buffer overflow.
      */
-    printf("%s", str);
+    if (enable_output) {
+        printf("%s", str);
+    }
 }
 
 /**
@@ -54,7 +60,7 @@ void ocall_print_string(const char *str) {
  * DICA: utilize variáveis estáticas se precisar persistir um estado entre
  *       chamadas a essa função.
  **/
-unsigned ocall_pedra_papel_tesoura(unsigned int round) {
+extern unsigned ocall_pedra_papel_tesoura(unsigned int round) {
     (void) round;
     return 0;
 }

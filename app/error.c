@@ -96,7 +96,7 @@ static const struct sgx_errlist_t sgx_errlist[] = {
 };
 
 /* Check error conditions for loading enclave */
-void print_error_message(sgx_status_t ret) {
+extern void print_error_message(sgx_status_t ret) {
     const size_t ttl = sizeof(sgx_errlist) / sizeof(sgx_errlist[0]);
 
     for (size_t idx = 0; idx < ttl; idx++) {
