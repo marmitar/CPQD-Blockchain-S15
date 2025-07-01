@@ -212,71 +212,77 @@ extern unsigned ocall_pedra_papel_tesoura(unsigned int round) {
     return desafio_5_answers[round - 1];
 }
 
-/** Test all possible values for each position, and chose the one that increase wins locally. */
-extern void desafio_5_find_solution(void) {
-    enable_enclave_output = false;
-
-    for (unsigned i = 0; i < ROUNDS; i++) {
-        desafio_5_answers[i] = 0 % 3;
-    }
-
+static uint8_t desafio_5_wins(void) {
     int wins = -1;
+
     sgx_status_t ret = ecall_pedra_papel_tesoura(global_eid, &wins);
-    if (ret != SGX_SUCCESS) {
+    if (ret != SGX_SUCCESS || wins < 0 || wins >= UINT8_MAX) {
         print_error_message(ret);
         abort();
     }
 
-    if (wins < 0) {
-        enable_enclave_output = true;
-        return;
+    if (wins >= 0 && wins <= UINT8_MAX) {
+        return (uint8_t) wins;
     }
 
-    unsigned unmodified = 0;
-    while (wins < ROUNDS) {
-        uint8_t modified = 0;
+    (void) fprintf(stderr, "Error: unexpected result from ecall_pedra_papel_tesoura: %d\n", wins);
+    abort();
+}
 
-        for (unsigned i = ROUNDS; i > 0; i--) {
-            const uint8_t v = desafio_5_answers[i - 1];
+static uint8_t desafio_5_find_partial_solution(uint8_t j, uint8_t w0) {
+    for (uint8_t i = ROUNDS; i >= j; i--) {
+        const uint8_t vi = desafio_5_answers[i - 1];
 
-            desafio_5_answers[i - 1] = (v + 1) % 3;
-            int wins1 = -1;
-            ret = ecall_pedra_papel_tesoura(global_eid, &wins1);
-            if (ret != SGX_SUCCESS) {
-                print_error_message(ret);
-                abort();
-            }
+        desafio_5_answers[i - 1] = (vi + 1) % 3;
+        const uint8_t w1 = desafio_5_wins();
 
-            desafio_5_answers[i - 1] = (v + 2) % 3;
-            int wins2 = -1;
-            ret = ecall_pedra_papel_tesoura(global_eid, &wins2);
-            if (ret != SGX_SUCCESS) {
-                print_error_message(ret);
-                abort();
-            }
+        desafio_5_answers[i - 1] = (vi + 2) % 3;
+        const uint8_t w2 = desafio_5_wins();
 
-            printf("v[i=%u]=%hhu, wins=%d, wins1=%d, wins2=%d\n", i - 1, v, wins, wins1, wins2);
-            if (wins >= wins1 && wins >= wins2) {
-                desafio_5_answers[i - 1] = v;
-                // wins = wins;
-            } else if (wins1 > wins2) {
-                desafio_5_answers[i - 1] = (v + 1) % 3;
-                wins = wins1;
-                modified++;
-            } else {
-                // desafio_5_answers[i-1] = (v + 2) % 3;
-                wins = wins2;
-                modified++;
-            }
+        printf("j=%hhu, v[i=%hhu]=%hhu, w0=%d, w1=%d, w2=%d\n", j - 1, i - 1, vi, w0, w1, w2);
+        if (w0 >= w1 && w0 >= w2) {
+            desafio_5_answers[i - 1] = (vi + 0) % 3;
+            // wins = wins;
+        } else if (w1 > w2) {
+            desafio_5_answers[i - 1] = (vi + 1) % 3;
+            w0 = w1;
+        } else {
+            // desafio_5_answers[i-1] = (v + 2) % 3;
+            w0 = w2;
         }
+    }
+    return w0;
+}
 
-        if (modified == 0) {
-            unmodified++;
-            for (unsigned i = 0; i < ROUNDS; i++) {
-                desafio_5_answers[i] = (desafio_5_answers[i] + unmodified) % 3;
-            }
+/** Test all possible values for each position, and chose the one that increase wins locally. */
+static void desafio_5_find_solution(void) {
+    enable_enclave_output = false;
+
+    for (unsigned i = 0; i < ROUNDS; i++) {
+        desafio_5_answers[i] = 0;
+    }
+
+    uint8_t w = desafio_5_wins();
+    for (uint8_t j = ROUNDS; j > 0; j--) {
+        const uint8_t vj = desafio_5_answers[j - 1];
+
+        const uint8_t w0 = desafio_5_find_partial_solution(j, w);
+
+        desafio_5_answers[j - 1] = (vj + 1) % 3;
+        const uint8_t w1 = desafio_5_find_partial_solution(j, w0);
+
+        desafio_5_answers[j - 1] = (vj + 2) % 3;
+        const uint8_t w2 = desafio_5_find_partial_solution(j, w1);
+
+        if (w2 >= w1 && w2 >= w0) {
+            w = w2;
+        } else if (w1 >= w0) {
+            desafio_5_answers[j - 1] = (vj + 1) % 3;
+            w = desafio_5_find_partial_solution(j, w2);
+        } else {
+            desafio_5_answers[j - 1] = (vj + 0) % 3;
+            w = desafio_5_find_partial_solution(j, w2);
         }
-        printf("modified = %hhu, unmodified = %u\n", modified, unmodified);
     }
 
     enable_enclave_output = true;
