@@ -232,39 +232,38 @@ extern void desafio_5_find_solution(void) {
         return;
     }
 
-    for (unsigned i = 0; i < ROUNDS; i++) {
-        desafio_5_answers[i] = 1;
+    while (wins < ROUNDS) {
+        for (unsigned i = 0; i < ROUNDS; i++) {
+            const uint8_t v = desafio_5_answers[i];
 
-        int wins1 = -1;
-        ret = ecall_pedra_papel_tesoura(global_eid, &wins1);
-        if (ret != SGX_SUCCESS) {
-            print_error_message(ret);
-            abort();
+            desafio_5_answers[i] = (v + 1) % 3;
+            int wins1 = -1;
+            ret = ecall_pedra_papel_tesoura(global_eid, &wins1);
+            if (ret != SGX_SUCCESS) {
+                print_error_message(ret);
+                abort();
+            }
+
+            desafio_5_answers[i] = (v + 2) % 3;
+            int wins2 = -1;
+            ret = ecall_pedra_papel_tesoura(global_eid, &wins2);
+            if (ret != SGX_SUCCESS) {
+                print_error_message(ret);
+                abort();
+            }
+
+            // printf("v[i=%u]=%hhu, wins=%d, wins1=%d, wins2=%d\n", i, v, wins, wins1, wins2);
+            if (wins > wins1 && wins > wins2) {
+                desafio_5_answers[i] = v;
+                // wins = wins;
+            } else if (wins1 > wins2) {
+                desafio_5_answers[i] = (v + 1) % 3;
+                wins = wins1;
+            } else {
+                // desafio_5_answers[i] = (v + 2) % 3;
+                wins = wins2;
+            }
         }
-
-        if (wins1 > wins) {
-            wins = wins1;
-            // printf("v[i=%u]=%u, wins=%d, wins1=%d, wins2=%d\n", i, desafio_5_answers[i], wins, wins1, -1);
-            continue;
-        }
-
-        desafio_5_answers[i] = 2;
-
-        int wins2 = -1;
-        ret = ecall_pedra_papel_tesoura(global_eid, &wins2);
-        if (ret != SGX_SUCCESS) {
-            print_error_message(ret);
-            abort();
-        }
-
-        if (wins2 > wins) {
-            wins = wins2;
-            // printf("v[i=%u]=%u, wins=%d, wins1=%d, wins2=%d\n", i, desafio_5_answers[i], wins, wins1, wins2);
-            continue;
-        }
-
-        desafio_5_answers[i] = 0;
-        // printf("v[i=%u]=%u, wins=%d, wins1=%d, wins2=%d\n", i, desafio_5_answers[i], wins, wins1, wins2);
     }
 
     enable_enclave_output = true;
