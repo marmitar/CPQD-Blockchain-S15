@@ -1,18 +1,17 @@
 #include <stdarg.h>
-#include <stdio.h>              /* vsnprintf */
-#include <string.h>             /* vsnprintf */
+#include <stdio.h>  /* vsnprintf */
+#include <string.h> /* vsnprintf */
 
-#include "sgx_trts.h"
 #include "enclave.h"
-#include "enclave_t.h"          /* print_string */
+#include "enclave_t.h" /* print_string */
+#include "sgx_trts.h"
 
 #define NAME_MAX_LEN 128
 
 /* ecall_name_check:
  *   [string]
  */
-int ecall_name_check(const char *name)
-{
+int ecall_name_check(const char *name) {
     size_t len, i;
     char c;
     int start;
@@ -22,35 +21,39 @@ int ecall_name_check(const char *name)
         c = name[i];
 
         // First char of each word must be uppercase
-        if (c < 'A' || c > 'Z')
+        if (c < 'A' || c > 'Z') {
             return -1;
+        }
         start = ++i;
 
         // Following letters must be lowercase
         for (; i < NAME_MAX_LEN; i++) {
             c = name[i];
-            if (c == '\0')
+            if (c == '\0') {
                 goto end;
-            if (c == ' ')
+            }
+            if (c == ' ') {
                 break;
-            if (c < 'a' || c > 'z')
+            }
+            if (c < 'a' || c > 'z') {
                 return -1;
+            }
         }
         // The last char must be a lowercase letter.
-        if ((i + 1) >= NAME_MAX_LEN || start == i)
+        if ((i + 1) >= NAME_MAX_LEN || start == i) {
             return -2;
+        }
     }
 end:
     return start < i ? 0 : -1;
 }
 
-/* 
- * printf: 
+/*
+ * printf:
  *   Invokes OCALL to display the enclave buffer to the terminal.
  */
-int printf(const char *fmt, ...)
-{
-    char buf[BUFSIZ] = { '\0' };
+int printf(const char *fmt, ...) {
+    char buf[BUFSIZ] = {'\0'};
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(buf, BUFSIZ, fmt, ap);

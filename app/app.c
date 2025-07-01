@@ -1,15 +1,15 @@
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
-#include <unistd.h>
 #include <pwd.h>
+#include <unistd.h>
 #define MAX_PATH FILENAME_MAX
 
-#include "sgx_urts.h"
 #include "app.h"
 #include "enclave_u.h"
 #include "error.h"
+#include "sgx_urts.h"
 
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
@@ -17,15 +17,12 @@ sgx_enclave_id_t global_eid = 0;
 /* Initialize the enclave:
  *   Call sgx_create_enclave to initialize an enclave instance
  */
-int initialize_enclave(void)
-{
+int initialize_enclave(void) {
     sgx_status_t ret = SGX_ERROR_UNEXPECTED;
 
     /* Call sgx_create_enclave to initialize an enclave instance */
     /* Debug Support: set 2nd parameter to 1 */
-    ret =
-        sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, NULL, NULL,
-                           &global_eid, NULL);
+    ret = sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, NULL, NULL, &global_eid, NULL);
     if (ret != SGX_SUCCESS) {
         print_error_message(ret);
         return -1;
@@ -35,17 +32,15 @@ int initialize_enclave(void)
 }
 
 /* OCall functions */
-void ocall_print_string(const char *str)
-{
-    /* Proxy/Bridge will check the length and null-terminate 
-     * the input string to prevent buffer overflow. 
+void ocall_print_string(const char *str) {
+    /* Proxy/Bridge will check the length and null-terminate
+     * the input string to prevent buffer overflow.
      */
     printf("%s", str);
 }
 
 /* Application entry */
-int SGX_CDECL main(int argc, char *argv[])
-{
+int SGX_CDECL main(int argc, char *argv[]) {
     int status;
     const char *name;
     sgx_status_t ret = SGX_ERROR_UNEXPECTED;
@@ -69,8 +64,7 @@ int SGX_CDECL main(int argc, char *argv[])
     }
     if (status != 0) {
         printf("the name '%s' is invalid\n", name);
-    }
-    else {
+    } else {
         printf("the name '%s' is valid\n", name);
     }
 

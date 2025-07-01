@@ -1,12 +1,11 @@
 #ifndef _ENCLAVE_H_
 #define _ENCLAVE_H_
 
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
     int printf(const char *fmt, ...);
@@ -15,4 +14,4 @@ extern "C"
 }
 #endif
 
-#endif                          /* !_ENCLAVE_H_ */
+#endif /* !_ENCLAVE_H_ */
