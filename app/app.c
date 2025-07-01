@@ -40,21 +40,23 @@ static int initialize_enclave(void) {
 }
 
 /** Allow ecall output temporarily. */
-static bool enable_output = true;
+static bool enable_enclave_output = true;
 
 /* OCall functions */
 extern void ocall_print_string(const char *str) {
     /* Proxy/Bridge will check the length and null-terminate
      * the input string to prevent buffer overflow.
      */
-    if (enable_output) {
+    if (enable_enclave_output) {
         printf("%s", str);
     }
 }
 
+/* CHALLENGE 2 */
+
 /** Brute-force all possible passwords for challenge 2. */
 static unsigned desafio_2_senha(void) {
-    enable_output = false;
+    enable_enclave_output = false;
 
     static const unsigned MAX_SENHA = 99'999;
     for (unsigned i = 0; i <= MAX_SENHA; i++) {
@@ -66,14 +68,75 @@ static unsigned desafio_2_senha(void) {
         }
 
         if (status == 0) {
-            enable_output = true;
+            enable_enclave_output = true;
             return i;
         }
     }
 
-    enable_output = true;
+    enable_enclave_output = true;
     printf("Info: No password matched.\n");
     return 0;
+}
+
+/* CHALLENGE 3 */
+
+#define WORD 20
+
+struct word {
+    char s[WORD];
+};
+
+static const char LETTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+[[gnu::const]]
+/** Guess word with all positions set to 'A'. */
+static struct word desafio_3_first_guess(void) {
+    struct word w = {.s = ""};
+    for (unsigned i = 0; i < WORD; i++) {
+        w.s[i] = LETTERS[0];
+    }
+    return w;
+}
+
+static int desafio_3_update_guess(struct word *w, struct word t) {
+    for (unsigned i = 0; i < WORD; i++) {
+        if (t.s[i] != w->s[i]) {
+            if (w->s[i] < 'Z') {
+                w->s[i]++;
+            } else {
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+/** Increment all wrong letters until the solution is found. */
+static struct word desafio_3_secret_word(void) {
+    struct word w = desafio_3_first_guess();
+
+    enable_enclave_output = false;
+    while (true) {
+        struct word t = w;
+
+        int status = -1;
+        sgx_status_t ret = ecall_palavra_secreta(global_eid, &status, t.s);
+        if (ret != SGX_SUCCESS) {
+            print_error_message(ret);
+            abort();
+        }
+
+        if (status == 0) {
+            enable_enclave_output = true;
+            return w;
+        }
+
+        status = desafio_3_update_guess(&w, t);
+        if (status != 0) {
+            enable_enclave_output = true;
+            return (struct word) {.s = "<not found>"};
+        }
+    }
 }
 
 /**
@@ -116,6 +179,17 @@ int SGX_CDECL main(void) {
     printf("Info: Password = %u\n", password);
 
     ret = ecall_verificar_senha(global_eid, &status, password);
+    if (ret != SGX_SUCCESS) {
+        print_error_message(ret);
+        abort();
+    }
+    ok = ok && (status == 0);
+
+    /* DESAFIO 3: ecall_palavra_secreta */
+    struct word secret = desafio_3_secret_word();
+    printf("Info: Secret word = %20s\n", secret.s);
+
+    ret = ecall_palavra_secreta(global_eid, &status, secret.s);
     if (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
