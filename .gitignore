@@ -30,8 +30,7 @@ builddir/
 **/*.a
 **/*.la
 **/*.lo
-**/*.so
-!docs/*.so
+/*.so
 **/*.lib
 **/*.dylib
 *.valgrind

@@ -130,3 +130,8 @@ signed_enclave = custom_target('signed-enclave',
     input: enclave,
     output: 'enclave.signed.so',
 )
+
+# # # # # # # # # # # #
+# CHANLLENGE ENCLAVE  #
+
+subdir('desafio')

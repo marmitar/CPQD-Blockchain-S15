@@ -6,6 +6,7 @@ threads = dependency('threads')
 app = executable('app',
     files('app.c', 'error.c'),
     untrusted_enclave,
+    untrusted_enclave_desafio,
     dependencies: [sgx_urts, threads],
     link_args: ['-Wl,-z,pack-relative-relocs'],
 )
