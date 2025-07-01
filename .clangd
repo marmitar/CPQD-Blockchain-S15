@@ -1,0 +1,13 @@
+CompileFlags:
+  CompilationDatabase: ./build
+  Add:
+    - -xc
+    - -D_CLANGD=1
+    - -D_FORTIFY_SOURCE=1
+  Remove:
+    - -fallow-store-data-races
+    - -fwhole-program
+    - -Wstringop-overflow=4
+    - -fno-trapv
+Index:
+  Background: Build

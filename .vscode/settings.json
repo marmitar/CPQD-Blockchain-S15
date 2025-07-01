@@ -1,0 +1,14 @@
+{
+  "diffEditor.ignoreTrimWhitespace": false,
+  "editor.rulers": [120],
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "clangd.arguments": [
+    "--clang-tidy",
+    "--header-insertion=never",
+    "--background-index",
+    "--background-index-priority=normal",
+    "--pch-storage=memory",
+  ],
+}

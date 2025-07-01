@@ -5,7 +5,6 @@
 **/.Spotlight-V100
 **/.Trashes
 .idea
-.vscode/settings.json
 *.sublime-project
 *.sublime-workspace
 
@@ -24,6 +23,7 @@ enclave/enclave_t.h
 # Build artifacts
 bin/
 build/
+builddir/
 .config_*
 **/*.pem
 **/*.o
@@ -33,4 +33,6 @@ build/
 **/*.so
 **/*.lib
 **/*.dylib
+*.valgrind
+vgcore.*
 main
