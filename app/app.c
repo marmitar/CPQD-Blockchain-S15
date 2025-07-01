@@ -68,19 +68,17 @@ int SGX_CDECL main(void) {
         return EXIT_FAILURE;
     }
 
-    /* ecall_name_check */
-    const char name[] = "Joao Da Silva";
-    int status = 0;
-    sgx_status_t ret = ecall_name_check(global_eid, &status, name);
+    bool ok = true;
+
+    /*  DESAFIO 1: ecall_verificar_aluno */
+    const char name[] = "Tiago De Paula Alves";
+    int status = -1;
+    sgx_status_t ret = ecall_verificar_aluno(global_eid, &status, name);
     if (ret != SGX_SUCCESS) {
         print_error_message(ret);
         abort();
     }
-    if (status != 0) {
-        printf("the name '%s' is invalid\n", name);
-    } else {
-        printf("the name '%s' is valid\n", name);
-    }
+    ok = ok && (status == 0);
 
     /* Destroy the enclave */
     ret = sgx_destroy_enclave(global_eid);
@@ -90,5 +88,5 @@ int SGX_CDECL main(void) {
     }
 
     printf("Info: Enclave successfully returned.\n");
-    return EXIT_SUCCESS;
+    return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }
