@@ -59,4 +59,35 @@ sgx_status_t challenge_3(sgx_enclave_id_t eid);
  */
 sgx_status_t challenge_4(sgx_enclave_id_t eid);
 
+[[gnu::nothrow, gnu::leaf]]
+/**
+ * Challenge 5: Rock, Paper, Scissors
+ * ----------------------------------
+ *
+ * Replace the project's **enclave-atividade.signed.so** and **enclave-atividade.edl** with the ones provided above.
+ * You do not need to create a new project. The enclave for this challenge has the same interface as the previous one;
+ * it just adds two functions:
+ *
+ * - `ecall_pedra_papel_tesoura`
+ * - `ocall_pedra_papel_tesoura`
+ *
+ * In the `app/app.c` code, create and implement the `ocall_pedra_papel_tesoura` ocall. This ocall will be called
+ * by the enclave when you call the `ecall_pedra_papel_tesoura` ecall. The enclave will call your ocall 20 times,
+ * and it must always return an integer between 0 and 2, where `rock = 0`, `paper = 1`, and `scissors = 2`.
+ * (Note: if you do not implement this ocall, the execution will fail). At the end of the execution, the enclave will
+ * return an integer representing how many matches you won, or a **negative value** if any problem occurred. You must
+ * win all 20 matches to complete the challenge. The submission is all of the enclave's plays and your plays, which
+ * will be printed to the terminal when the challenge is completed. Example:
+ *
+ *
+ * ```raw
+ * ------------------------------------------------
+ * [ENCLAVE] DESAFIO 5 CONCLUIDO!!
+ *           ENCLAVE JOGADAS: 11212201212200121120
+ *              SUAS JOGADAS: 22020012020011202201
+ * ------------------------------------------------
+ * ```
+ */
+sgx_status_t challenge_5(sgx_enclave_id_t eid);
+
 #endif  // APP_CHALLENGES_H
