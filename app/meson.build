@@ -18,3 +18,11 @@ app = executable('app',
     dependencies: [sgx_urts, threads],
     link_args: ['-Wl,-z,pack-relative-relocs'],
 )
+
+custom_target('disassembly',
+  input: app,
+  output: 'app.s',
+  command: ['objdump', '-d', '-S', '--no-show-raw-insn', '--no-addresses', '@INPUT@'],
+  capture: true,
+  build_by_default: true
+)
