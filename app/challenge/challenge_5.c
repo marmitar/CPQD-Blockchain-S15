@@ -59,16 +59,48 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
 }
 
 /**
+ * How to initialize each position of the `answers` array. See `init_greedy`.
+ */
+enum [[gnu::packed]] init_mode_t {
+    /** Set all values to zero. */
+    INIT_ZERO,
+    /** Set all values to `position + start`. */
+    INIT_ADD,
+    /** Set all values to `position * start`, with `+ 1` for more mixing. */
+    INIT_MUL,
+    /** Set all values to `position**2 + start**2`. */
+    INIT_SQUARE,
+};
+
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
+/**
  * Function to initialize the `answers` array (or part of it). It receives the current `position` being initialized
- * and the the `start` position for the current initialization process, and must return `0` (rock), `1` (paper), or
- * `2` (scissors) to be used and `answers` for that `position`.
+ * and the the `start` position for the current initialization process, and returns `0` (rock), `1` (paper), or
+ * `2` (scissors) to be used as `answers` for that `position`, according to the `init` mode given.
  *
  * This function is used in the `greedy` hill climbing solution as a starting point, and is extremely important for
  * finding a good local maximum of high wins.
  */
-typedef uint8_t (*init_function_t)(size_t position, size_t start);
+static uint8_t init_greedy(size_t position, size_t start, enum init_mode_t init) {
+    assume(position <= ROUNDS);
+    assume(start <= ROUNDS);
 
-[[nodiscard("error must be checked"), gnu::nonnull(2, 4), gnu::hot]]
+    switch (init) {
+        case INIT_ZERO:
+            return 0;
+        case INIT_ADD:
+            return (uint8_t) (position + start) % 3U;
+        case INIT_MUL:
+            return (uint8_t) (position * start + 1) % 3U;
+        case INIT_SQUARE:
+            return (uint8_t) (position * position + start * start) % 3U;
+    }
+
+    printf("Challenge 5: Invalid enum init_mode_t = %d\n", (int) init);
+    return UINT8_MAX;
+}
+
+[[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
 /**
  * (Partial) Greedy Hill Climbing solution
  * ---------------------------------------
@@ -91,12 +123,12 @@ static uint32_t greedy(
     const sgx_enclave_id_t eid,
     sgx_status_t *NONNULL status,
     const size_t start,
-    const NONNULL init_function_t init
+    const enum init_mode_t init
 ) {
     assume(start <= 2ULL * ROUNDS);
     // we must initialize the positions, so previous values don't interfere with the results
     for (size_t i = start; i < ROUNDS; i++) {
-        answers[i] = init(i, start);
+        answers[i] = init_greedy(i, start, init);
     }
 
     // number of wins when: answers[i] = (init(i, start) + 0) % 3
@@ -144,52 +176,6 @@ static uint32_t greedy(
     return total_wins;
 }
 
-[[gnu::const, nodiscard("pure function"), gnu::hot]]
-/**
- * A `init_function_t` that sets all values to zero.
- */
-static uint8_t init_zero(const size_t i, const size_t s) {
-    assume(i <= ROUNDS);
-    assume(s <= ROUNDS);
-
-    (void) i;
-    (void) s;
-    return 0;
-}
-
-[[gnu::const, nodiscard("pure function"), gnu::hot]]
-/**
- * A `init_function_t` that sets all values to `i + s`.
- */
-static uint8_t init_add(const size_t i, const size_t s) {
-    assume(i <= ROUNDS);
-    assume(s <= ROUNDS);
-
-    return (uint8_t) (i + s) % 3U;
-}
-
-[[gnu::const, nodiscard("pure function"), gnu::hot]]
-/**
- * A `init_function_t` that sets all values to `i * s` with `+ 1` for more mixing.
- */
-static uint8_t init_mul(const size_t i, const size_t s) {
-    assume(i <= ROUNDS);
-    assume(s <= ROUNDS);
-
-    return (uint8_t) (i * s + 1) % 3U;
-}
-
-[[gnu::const, nodiscard("pure function"), gnu::hot]]
-/**
- * A `init_function_t` that sets all values to `i**2 + s**2`.
- */
-static uint8_t init_square(const size_t i, const size_t s) {
-    assume(i <= ROUNDS);
-    assume(s <= ROUNDS);
-
-    return (uint8_t) (i * i + s * s) % 3U;
-}
-
 [[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
 /**
  * Limited Depth-First Search solution
@@ -219,7 +205,7 @@ static uint32_t limited_dfs(
     const size_t max_depth
 ) {
     if likely (max_depth == 0) {
-        const NONNULL init_function_t init[] = {init_zero, init_mul, init_add, init_square};
+        const enum init_mode_t init[] = {INIT_ZERO, INIT_MUL, INIT_ADD, INIT_SQUARE};
 
         uint32_t total_wins = 0;
         for (size_t i = 0; i < sizeof(init) / sizeof(init[0]); i++) {
