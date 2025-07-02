@@ -55,7 +55,7 @@ static word_t update_secret(word_t secret, const word_t guess, const char letter
  */
 extern sgx_status_t challenge_3(sgx_enclave_id_t eid) {
     static const char LETTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    static const size_t N_LETTERS = strlen(LETTERS);
+    const size_t N_LETTERS = strlen(LETTERS);
 
     word_t secret = make_word(LETTERS[0]);
 

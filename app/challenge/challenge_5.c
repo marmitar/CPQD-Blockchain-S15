@@ -111,14 +111,14 @@ static uint32_t greedy(
         const uint8_t vi = answers[i - 1];
 
         // number of wins when: answers[i] = (init(i, start) + 1) % 3
-        answers[i - 1] = (vi + 1) % 3;
+        answers[i - 1] = (uint8_t) (vi + 1U) % 3U;
         const uint8_t wins1 = check_answers(eid, status);
         if unlikely (wins1 == UINT8_MAX) {
             return UINT32_MAX;
         }
 
         // number of wins when: answers[i] = (init(i, start) + 2) % 3
-        answers[i - 1] = (vi + 2) % 3;
+        answers[i - 1] = (uint8_t) (vi + 2U) % 3U;
         const uint8_t wins2 = check_answers(eid, status);
         if unlikely (wins2 == UINT8_MAX) {
             return UINT32_MAX;
@@ -126,13 +126,13 @@ static uint32_t greedy(
 
         // select the highest one, and save to `wins0`
         if (wins0 >= wins1 && wins0 >= wins2) {
-            answers[i - 1] = (vi + 0) % 3;
+            answers[i - 1] = (uint8_t) (vi + 0U) % 3U;
             // SKIP: wins0 = wins0;
         } else if (wins1 > wins2) {
-            answers[i - 1] = (vi + 1) % 3;
+            answers[i - 1] = (uint8_t) (vi + 1U) % 3U;
             wins0 = wins1;
         } else {
-            // SKIP: answers[i-1] = (vi + 2) % 3;
+            // SKIP: answers[i-1] = (uint8_t) (vi + 2U) % 3U;
             wins0 = wins2;
         }
 
@@ -165,7 +165,7 @@ static uint8_t init_add(const uint8_t i, const uint8_t s) {
     assume(i <= ROUNDS);
     assume(s <= ROUNDS);
 
-    return (i + s) % 3;
+    return (uint8_t) (i + s) % 3U;
 }
 
 [[gnu::const, nodiscard("pure function")]]
@@ -176,7 +176,7 @@ static uint8_t init_mul(const uint8_t i, const uint8_t s) {
     assume(i <= ROUNDS);
     assume(s <= ROUNDS);
 
-    return (i * s + 1) % 3;
+    return (uint8_t) (i * s + 1) % 3U;
 }
 
 [[gnu::const, nodiscard("pure function")]]
@@ -187,7 +187,7 @@ static uint8_t init_square(const uint8_t i, const uint8_t s) {
     assume(i <= ROUNDS);
     assume(s <= ROUNDS);
 
-    return (i * i + s * s) % 3;
+    return (uint8_t) (i * i + s * s) % 3U;
 }
 
 [[nodiscard("error must be checked"), gnu::nonnull(2)]]

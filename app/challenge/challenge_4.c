@@ -14,7 +14,7 @@
  *
  * @see https://en.wikipedia.org/wiki/2,147,483,647
  */
-static const uint32_t P = 2'147'483'647;
+static constexpr const uint32_t P = 2'147'483'647;
 // we assume multiplication P doesn't overflow uint64_t
 static_assert(P <= INT32_MAX);
 
@@ -36,8 +36,7 @@ static int fromP(const uint32_t n) {
     if likely (n <= P / 2) {
         return (int) n;
     }
-    static const int Pi = (int) P;
-    return ((int) (n % Pi)) - Pi;
+    return ((int) (n % P)) - ((int) P);
 }
 
 [[gnu::const, nodiscard("pure function")]]
