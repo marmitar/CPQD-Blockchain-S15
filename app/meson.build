@@ -5,6 +5,7 @@ threads = dependency('threads')
 
 challenges = files(
     'challenge/challenge_1.c',
+    'challenge/challenge_2.c',
 )
 
 app = executable('app',

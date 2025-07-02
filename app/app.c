@@ -54,32 +54,6 @@ extern void ocall_print_string(const char *str) {
     }
 }
 
-/* CHALLENGE 2 */
-
-/** Brute-force all possible passwords for challenge 2. */
-static unsigned desafio_2_senha(void) {
-    enable_enclave_output = false;
-
-    static const unsigned MAX_SENHA = 99'999;
-    for (unsigned i = 0; i <= MAX_SENHA; i++) {
-        int status = -1;
-        sgx_status_t ret = ecall_verificar_senha(global_eid, &status, i);
-        if unlikely (ret != SGX_SUCCESS) {
-            print_error_message(ret);
-            abort();
-        }
-
-        if (status == 0) {
-            enable_enclave_output = true;
-            return i;
-        }
-    }
-
-    enable_enclave_output = true;
-    printf("Info: No password matched.\n");
-    return 0;
-}
-
 /* CHALLENGE 3 */
 
 #define WORD 20
@@ -351,22 +325,18 @@ int SGX_CDECL main(void) {
         ok = false;
     }
 
-    /* DESAFIO 2: ecall_verificar_senha */
-    const unsigned password = desafio_2_senha();
-    printf("Info: Password = %u\n", password);
-
-    int status = -1;
-    ret = ecall_verificar_senha(global_eid, &status, password);
+    /* CHALLENGE 2: Crack the password */
+    ret = challenge_2(global_eid);
     if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
-        abort();
+        ok = false;
     }
-    ok = likely(ok) && (status == 0);
 
     /* DESAFIO 3: ecall_palavra_secreta */
     struct word secret = desafio_3_secret_word();
     printf("Info: Secret word = %20s\n", secret.s);
 
+    int status = -1;
     ret = ecall_palavra_secreta(global_eid, &status, secret.s);
     if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
