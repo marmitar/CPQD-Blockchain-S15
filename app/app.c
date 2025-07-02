@@ -23,87 +23,70 @@
 #    define ENCLAVE_FILENAME "enclave.signed.so"
 #endif
 
-/* Global EID shared by multiple threads */
-static sgx_enclave_id_t global_eid = 0;
-
-/* Initialize the enclave:
- *   Call sgx_create_enclave to initialize an enclave instance
- */
-static int initialize_enclave(void) {
-    /* Call sgx_create_enclave to initialize an enclave instance */
-    /* Debug Support: set 2nd parameter to 1 */
-    sgx_status_t ret = sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, NULL, NULL, &global_eid, NULL);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
-        return -1;
-    }
-
-    return 0;
-}
-
-/** Allow ecall output temporarily. */
-static bool enable_enclave_output = true;
-
-/* OCall functions */
-extern void ocall_print_string(const char *str) {
+/**
+ * OCALL called by the enclave to print some text to the terminal.
+ **/
+extern void ocall_print_string(const char *NULLABLE str) {
     /* Proxy/Bridge will check the length and null-terminate
      * the input string to prevent buffer overflow.
      */
-    if (enable_enclave_output) {
-        printf("%s", str);
-    }
+    puts(likely(str != NULL) ? str : "<null>");
 }
 
 /* Application entry */
-int SGX_CDECL main(void) {
+extern int SGX_CDECL main(void) {
+    /* Global EID shared by multiple threads */
+    sgx_enclave_id_t global_eid = (sgx_enclave_id_t) -1;
+
     /* Initialize the enclave */
-    if unlikely (initialize_enclave() != 0) {
-        printf("Enter a character before exit ...\n");
-        (void) getchar();
+    /* Debug Support: set 2nd parameter to 1 */
+    sgx_status_t status = sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, NULL, NULL, &global_eid, NULL);
+    if unlikely (status != SGX_SUCCESS) {
+        print_error_message(status);
         return EXIT_FAILURE;
     }
 
     bool ok = true;
 
     /* CHALLENGE 1: Call the enclave */
-    sgx_status_t ret = challenge_1(global_eid);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
+    status = challenge_1(global_eid);
+    if unlikely (status != SGX_SUCCESS) {
+        print_error_message(status);
         ok = false;
     }
 
     /* CHALLENGE 2: Crack the password */
-    ret = challenge_2(global_eid);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
+    status = challenge_2(global_eid);
+    if unlikely (status != SGX_SUCCESS) {
+        print_error_message(status);
         ok = false;
     }
 
     /* CHALLENGE 3: Secret Sequence */
-    ret = challenge_3(global_eid);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
+    status = challenge_3(global_eid);
+    if unlikely (status != SGX_SUCCESS) {
+        print_error_message(status);
         ok = false;
     }
 
     /* CHALLENGE 4: Secret Polynomial */
-    ret = challenge_4(global_eid);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
+    status = challenge_4(global_eid);
+    if unlikely (status != SGX_SUCCESS) {
+        print_error_message(status);
         ok = false;
     }
 
     /* CHALLENGE 5: Rock, Paper, Scissors */
-    ret = challenge_5(global_eid);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
+    status = challenge_5(global_eid);
+    if unlikely (status != SGX_SUCCESS) {
+        print_error_message(status);
         ok = false;
     }
 
     /* Destroy the enclave */
-    ret = sgx_destroy_enclave(global_eid);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
+    status = sgx_destroy_enclave(global_eid);
+    if unlikely (status != SGX_SUCCESS) {
+        print_error_message(status);
         abort();
     }
 
