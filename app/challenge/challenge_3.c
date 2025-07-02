@@ -1,5 +1,7 @@
 #include <sgx_eid.h>
 #include <sgx_error.h>
+#include <stddef.h>
+#include <string.h>
 
 #include "../defines.h"
 #include "./challenges.h"
@@ -60,7 +62,7 @@ extern sgx_status_t challenge_3(sgx_enclave_id_t eid) {
         word_t guess = secret;
 
         int rv = -1;
-        sgx_status_t status = ecall_palavra_secreta(eid, &rv, guess.data);
+        const sgx_status_t status = ecall_palavra_secreta(eid, &rv, guess.data);
         if unlikely (status != SGX_SUCCESS) {
             return status;
         }

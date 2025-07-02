@@ -98,7 +98,7 @@ struct coefficients {
     int c;
 };
 
-[[gnu::const, nodiscard("pure function"), gnu::noinline]]
+[[gnu::const, nodiscard("pure function")]]
 /*
  * Quadratic interpolation in F_p
  *
@@ -121,7 +121,7 @@ struct coefficients {
  *
  * Returned coefficients are canonicalised to signed ints via `fromP()`.
  */
-extern struct coefficients solve_polynomial_coefficients(
+static struct coefficients solve_polynomial_coefficients(
     const uint32_t x1,
     const uint32_t y1,
     const uint32_t x2,
@@ -129,6 +129,11 @@ extern struct coefficients solve_polynomial_coefficients(
     const uint32_t x3,
     const uint32_t y3
 ) {
+    // points must be distinct
+    assume(x1 != x2);
+    assume(x2 != x3);
+    assume(x3 != x1);
+
     const uint32_t D = mulP(mulP(subP(x1, x2), subP(x1, x3)), subP(x2, x3));
     const uint32_t iD = expP(D, P - 2);
 
@@ -178,8 +183,8 @@ extern sgx_status_t challenge_4(sgx_enclave_id_t eid) {
     const struct coefficients poly =
         solve_polynomial_coefficients(toP(x[0]), toP(y[0]), toP(x[1]), toP(y[1]), toP(x[2]), toP(y[2]));
 
-    int rv = -1;
-    sgx_status_t status = ecall_verificar_polinomio(eid, &rv, poly.a, poly.b, poly.c);
+    int rv = 0;
+    const sgx_status_t status = ecall_verificar_polinomio(eid, &rv, poly.a, poly.b, poly.c);
     if unlikely (status != SGX_SUCCESS) {
         return status;
     }

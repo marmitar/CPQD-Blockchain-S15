@@ -5,7 +5,7 @@
 #include <sgx_eid.h>
 #include <sgx_error.h>
 
-[[gnu::nothrow, gnu::leaf]]
+[[nodiscard("error must be checked"), gnu::nothrow, gnu::leaf]]
 /**
  * Challenge 1: Call the enclave
  * -----------------------------
@@ -15,7 +15,7 @@
  */
 sgx_status_t challenge_1(sgx_enclave_id_t eid);
 
-[[gnu::nothrow, gnu::leaf]]
+[[nodiscard("error must be checked"), gnu::nothrow, gnu::leaf]]
 /**
  * Challenge 2: Crack the password
  * -------------------------------
@@ -28,7 +28,7 @@ sgx_status_t challenge_1(sgx_enclave_id_t eid);
  */
 sgx_status_t challenge_2(sgx_enclave_id_t eid);
 
-[[gnu::nothrow, gnu::leaf]]
+[[nodiscard("error must be checked"), gnu::nothrow, gnu::leaf]]
 /**
  * Challenge 3: Secret Sequence
  * ----------------------------
@@ -47,7 +47,7 @@ sgx_status_t challenge_2(sgx_enclave_id_t eid);
  */
 sgx_status_t challenge_3(sgx_enclave_id_t eid);
 
-[[gnu::nothrow, gnu::leaf]]
+[[nodiscard("error must be checked"), gnu::nothrow, gnu::leaf]]
 /**
  * Challenge 4: Secret Polynomial
  * ------------------------------
@@ -59,7 +59,7 @@ sgx_status_t challenge_3(sgx_enclave_id_t eid);
  */
 sgx_status_t challenge_4(sgx_enclave_id_t eid);
 
-[[gnu::nothrow, gnu::leaf]]
+[[nodiscard("error must be checked"), gnu::nothrow, gnu::leaf]]
 /**
  * Challenge 5: Rock, Paper, Scissors
  * ----------------------------------

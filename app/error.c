@@ -1,8 +1,8 @@
 #include <sgx_error.h>
 #include <stdio.h>
 
-#include "defines.h"
-#include "error.h"
+#include "./defines.h"
+#include "./error.h"
 
 typedef struct sgx_errlist_t {
     sgx_status_t err;
@@ -99,7 +99,7 @@ static const sgx_errlist_t sgx_errlist[] = {
      },
 };
 
-[[gnu::const]]
+[[gnu::const, nodiscard("pure function")]]
 /** Map error code to message. */
 static sgx_errlist_t error_message(sgx_status_t ret) {
     const size_t ttl = sizeof(sgx_errlist) / sizeof(sgx_errlist[0]);

@@ -15,7 +15,7 @@ extern sgx_status_t challenge_1(sgx_enclave_id_t eid) {
     const char name[] = "Tiago De Paula Alves";
 
     int rv = -1;
-    sgx_status_t status = ecall_verificar_aluno(eid, &rv, name);
+    const sgx_status_t status = ecall_verificar_aluno(eid, &rv, name);
     if unlikely (status != SGX_SUCCESS) {
         return status;
     }

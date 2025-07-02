@@ -9,7 +9,8 @@
  * Challenge 2: Crack the password
  * -------------------------------
  *
- * Brute force all possible passwords, from `0` to `99_999`, and find the correct one.
+ * Brute force all possible passwords, from `0` to `99_999`, and find the correct one. Up to 100 thousand
+ * calls to `ecall_verificar_senha` required.
  */
 extern sgx_status_t challenge_2(sgx_enclave_id_t eid) {
     static const unsigned MIN_PASSWORD = 0;
@@ -17,8 +18,7 @@ extern sgx_status_t challenge_2(sgx_enclave_id_t eid) {
 
     for (unsigned password = MIN_PASSWORD; password <= MAX_PASSWORD; password++) {
         int rv = -1;
-
-        sgx_status_t status = ecall_verificar_senha(eid, &rv, password);
+        const sgx_status_t status = ecall_verificar_senha(eid, &rv, password);
         if unlikely (status != SGX_SUCCESS) {
             return status;
         }

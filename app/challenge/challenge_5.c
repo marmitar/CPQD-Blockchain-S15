@@ -1,6 +1,7 @@
 #include <limits.h>
 #include <sgx_eid.h>
 #include <sgx_error.h>
+#include <stdint.h>
 
 #include "../defines.h"
 #include "./challenges.h"
@@ -28,7 +29,7 @@ extern unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
     return answers[round - 1];
 }
 
-[[gnu::nonnull(2)]]
+[[gnu::nonnull(2), nodiscard("useless call if unused")]]
 static uint8_t check_answers(sgx_enclave_id_t eid, sgx_status_t *NONNULL status) {
     int wins = -1;
 
@@ -122,6 +123,7 @@ static uint8_t init_square(uint8_t i, uint8_t s) {
     return (i * i + s * s) % 3;
 }
 
+[[gnu::nonnull(2)]]
 static uint32_t limited_dfs(sgx_enclave_id_t eid, sgx_status_t *NONNULL status, uint8_t start, uint8_t depth) {
     if likely (depth == 0) {
         return greedy(eid, status, start, init_zero) + greedy(eid, status, start, init_add)
@@ -149,6 +151,7 @@ static uint32_t limited_dfs(sgx_enclave_id_t eid, sgx_status_t *NONNULL status, 
  * Challenge 5: Rock, Paper, Scissors
  * ----------------------------------
  *
+ * TODO
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
     for (uint8_t start = 0; start < ROUNDS; start++) {
