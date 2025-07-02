@@ -17,10 +17,6 @@
 #include "./error.h"
 #include "enclave_u.h"
 
-#if !defined(ENCLAVE_FILENAME)
-#    define ENCLAVE_FILENAME "enclave.signed.so"
-#endif
-
 /**
  * OCALL called by the enclave to print some text to the terminal.
  **/
@@ -32,13 +28,23 @@ extern void ocall_print_string(const char *NULLABLE str) {
 }
 
 /* Application entry */
-extern int SGX_CDECL main(void) {
+extern int SGX_CDECL main(const int argc, const char *restrict NONNULL argv[NONNULL argc]) {
+    const char *enclave = "enclave-desafio-5.signed.so";
+    // accept an optional argument for the enclave file
+    if unlikely (argc == 2) {
+        enclave = argv[1];
+    } else if unlikely (argc > 3) {
+        printf("Error: too many arguments\n");
+        printf("%s: [SIGNED_ENCLAVE.SO]\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
     /* Global EID shared by multiple threads */
     sgx_enclave_id_t global_eid = (sgx_enclave_id_t) -1;
 
     /* Initialize the enclave */
     /* Debug Support: set 2nd parameter to 1 */
-    sgx_status_t status = sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, NULL, NULL, &global_eid, NULL);
+    sgx_status_t status = sgx_create_enclave(enclave, SGX_DEBUG_FLAG, NULL, NULL, &global_eid, NULL);
     if unlikely (status != SGX_SUCCESS) {
         print_error_message(status);
         return EXIT_FAILURE;
