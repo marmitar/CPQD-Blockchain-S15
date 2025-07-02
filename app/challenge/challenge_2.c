@@ -1,5 +1,6 @@
 #include <sgx_eid.h>
 #include <sgx_error.h>
+#include <stdio.h>
 
 #include "../defines.h"
 #include "./challenges.h"
@@ -10,7 +11,7 @@
  * -------------------------------
  *
  * Brute force all possible passwords, from `0` to `99_999`, and find the correct one. Up to 100 thousand
- * calls to `ecall_verificar_senha` required.
+ * calls to `ecall_verificar_senha` are required.
  */
 extern sgx_status_t challenge_2(sgx_enclave_id_t eid) {
     static const unsigned MIN_PASSWORD = 0;
@@ -24,10 +25,13 @@ extern sgx_status_t challenge_2(sgx_enclave_id_t eid) {
         }
 
         if (rv == 0) {
+#ifdef DEBUG
+            printf("Challenge 2: password = %u\n", password);
+#endif
             return SGX_SUCCESS;
         }
     }
 
-    // TODO: print error?
+    printf("Challenge 2: Password not found\n");
     return SGX_ERROR_UNEXPECTED;
 }

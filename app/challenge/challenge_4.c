@@ -3,6 +3,7 @@
 #include <sgx_eid.h>
 #include <sgx_error.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "../defines.h"
 #include "./challenges.h"
@@ -166,7 +167,8 @@ static struct coefficients solve_polynomial_coefficients(
  * ------------------------------
  *
  * Evaluate the polynomial on `x = 10000`, `x = 22222` and `x = 303030`, then solve the linear equation to find the
- * coefficients for the secret polynomial.
+ * coefficients for the secret polynomial. Only 3 calls to `ecall_polinomio_secreto` and 1 call to
+ * `ecall_verificar_polinomio` are made.
  */
 extern sgx_status_t challenge_4(sgx_enclave_id_t eid) {
     const int x[3] = {10'000, 22'222, 303'030};
@@ -178,10 +180,17 @@ extern sgx_status_t challenge_4(sgx_enclave_id_t eid) {
         if unlikely (status != SGX_SUCCESS) {
             return status;
         }
+#ifdef DEBUG
+        printf("Challenge 4: x%u = %d, y%u = %d\n", i + 1, x[i], i + 1, y[i]);
+#endif
     }
 
     const struct coefficients poly =
         solve_polynomial_coefficients(toP(x[0]), toP(y[0]), toP(x[1]), toP(y[1]), toP(x[2]), toP(y[2]));
+
+#ifdef DEBUG
+    printf("Challenge 4: a = %d, b = %i, c = %i\n", poly.a, poly.b, poly.c);
+#endif
 
     int rv = 0;
     const sgx_status_t status = ecall_verificar_polinomio(eid, &rv, poly.a, poly.b, poly.c);
@@ -190,7 +199,7 @@ extern sgx_status_t challenge_4(sgx_enclave_id_t eid) {
     }
 
     if unlikely (rv == 0) {
-        // TODO: print error?
+        printf("Challenge 4: Coefficients not found\n");
         return SGX_ERROR_UNEXPECTED;
     }
 

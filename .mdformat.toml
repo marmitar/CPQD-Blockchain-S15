@@ -3,8 +3,7 @@ wrap = 120
 number = true
 end_of_line = "lf"
 validate = true
-## FIXME: not available on Python 3.12
-# exclude = ["LICENSE.md"]
+exclude = ["LICENSE.md"]
 
 ## See https://mdformat.readthedocs.io/en/stable/users/plugins.html
 codeformatters = [

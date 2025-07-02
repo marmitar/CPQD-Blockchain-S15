@@ -1,8 +1,10 @@
+#include <inttypes.h>
 #include <limits.h>
 #include <sgx_eid.h>
 #include <sgx_error.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "../defines.h"
 #include "./challenges.h"
@@ -27,8 +29,7 @@ static uint8_t answers[ROUNDS] = {0};
  **/
 extern unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
     if unlikely (round < 1 || round > ROUNDS) {
-        // TODO:
-        // (void) fprintf(stderr, "Error: invalid input round: %u\n", round);
+        printf("Challenge 5: Invalid input round = %u\n", round);
         return UINT_MAX;
     }
     return answers[round - 1];
@@ -42,15 +43,14 @@ extern unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
  * `UINT8_MAX` is also returned to stop the solution and an error code is written to `status`.
  */
 static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL status) {
-    int wins = -1;
+    int wins = INT_MIN;
 
     sgx_status_t rstatus = ecall_pedra_papel_tesoura(eid, &wins);
     if unlikely (rstatus != SGX_SUCCESS || wins < 0 || wins >= UINT8_MAX) {
         *status = rstatus;
         return UINT8_MAX;
     } else if unlikely (wins < 0 || wins > ROUNDS) {
-        // TODO:
-        // (void) fprintf(stderr, "Error: unexpected result from ecall_pedra_papel_tesoura: %d\n", wins);
+        printf("Challenge 5: Invalid ecall_pedra_papel_tesoura wins = %d\n", wins);
         *status = SGX_ERROR_UNEXPECTED;
         return UINT8_MAX;
     }
@@ -230,11 +230,13 @@ static uint32_t limited_dfs(
             total_wins += wins;
         }
         return total_wins;
+    } else if (start >= ROUNDS) {
+        return 0;
     }
 
     uint32_t wins[3] = {UINT32_MAX, UINT32_MAX, UINT32_MAX};
     for (uint8_t d = 0; d <= 2; d++) {
-        answers[start] = d;  // FIXME: possible out-of-bounds access
+        answers[start] = d;
         wins[d] = limited_dfs(eid, status, start + 1, depth - 1);
         if unlikely (wins[d] == UINT32_MAX) {
             return UINT32_MAX;
@@ -270,8 +272,12 @@ extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
         if likely (total_wins == UINT32_MAX) {
             return status;
         }
+
+#ifdef DEBUG
+        printf("Challenge 5: answers[%" PRIu8 "] = %" PRIu8 "\n", start, answers[start]);
+#endif
     }
 
-    // TODO: print error?
+    printf("Challenge 5: Winning sequence not found\n");
     return SGX_ERROR_UNEXPECTED;
 }

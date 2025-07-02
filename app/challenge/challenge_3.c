@@ -1,6 +1,7 @@
 #include <sgx_eid.h>
 #include <sgx_error.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../defines.h"
@@ -68,6 +69,9 @@ extern sgx_status_t challenge_3(sgx_enclave_id_t eid) {
         }
 
         if (rv == 0) {
+#ifdef DEBUG
+            printf("Challenge 3: secret = %*s\n", WORD_LEN, guess.data);
+#endif
             return SGX_SUCCESS;
         }
 
@@ -76,6 +80,6 @@ extern sgx_status_t challenge_3(sgx_enclave_id_t eid) {
         }
     }
 
-    // TODO: print error?
+    printf("Challenge 3: Secret not found\n");
     return SGX_ERROR_UNEXPECTED;
 }

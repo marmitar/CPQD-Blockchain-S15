@@ -4,8 +4,6 @@
 #endif
 // clang-format on
 
-#include <assert.h>
-#include <limits.h>
 #include <sgx_defs.h>
 #include <sgx_eid.h>
 #include <sgx_error.h>
@@ -87,7 +85,7 @@ extern int SGX_CDECL main(void) {
     status = sgx_destroy_enclave(global_eid);
     if unlikely (status != SGX_SUCCESS) {
         print_error_message(status);
-        abort();
+        return EXIT_FAILURE;
     }
 
     printf("Info: Enclave successfully returned.\n");
