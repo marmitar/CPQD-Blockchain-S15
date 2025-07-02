@@ -37,7 +37,7 @@ static word_t make_word(char letter) {
  * Replace `secret` with the given `letter` in all positions modified in `guess`, returning the updated `secret`.
  */
 static word_t update_secret(word_t secret, const word_t guess, const char letter) {
-    for (unsigned i = 0; i < WORD_LEN; i++) {
+    for (size_t i = 0; i < WORD_LEN; i++) {
         if unlikely (guess.data[i] != secret.data[i]) {
             secret.data[i] = letter;
         }

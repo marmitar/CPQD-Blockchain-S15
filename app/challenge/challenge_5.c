@@ -66,7 +66,7 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
  * This function is used in the `greedy` hill climbing solution as a starting point, and is extremely important for
  * finding a good local maximum of high wins.
  */
-typedef uint8_t (*init_function_t)(uint8_t position, uint8_t start);
+typedef uint8_t (*init_function_t)(size_t position, size_t start);
 
 [[nodiscard("error must be checked"), gnu::nonnull(2, 4)]]
 /**
@@ -90,12 +90,12 @@ typedef uint8_t (*init_function_t)(uint8_t position, uint8_t start);
 static uint32_t greedy(
     const sgx_enclave_id_t eid,
     sgx_status_t *NONNULL status,
-    const uint8_t start,
+    const size_t start,
     const NONNULL init_function_t init
 ) {
-    assume(start <= 2 * ROUNDS);
+    assume(start <= 2ULL * ROUNDS);
     // we must initialize the positions, so previous values don't interfere with the results
-    for (uint8_t i = start; i < ROUNDS; i++) {
+    for (size_t i = start; i < ROUNDS; i++) {
         answers[i] = init(i, start);
     }
 
@@ -107,7 +107,7 @@ static uint32_t greedy(
 
     uint32_t total_wins = wins0;
     // we start from the end, so there's less interference of the pseudo-random Rock, Paper, Scissors sequence
-    for (uint8_t i = ROUNDS; i > start; i--) {
+    for (size_t i = ROUNDS; i > start; i--) {
         const uint8_t vi = answers[i - 1];
 
         // number of wins when: answers[i] = (init(i, start) + 1) % 3
@@ -148,7 +148,7 @@ static uint32_t greedy(
 /**
  * A `init_function_t` that sets all values to zero.
  */
-static uint8_t init_zero(const uint8_t i, const uint8_t s) {
+static uint8_t init_zero(const size_t i, const size_t s) {
     assume(i <= ROUNDS);
     assume(s <= ROUNDS);
 
@@ -161,7 +161,7 @@ static uint8_t init_zero(const uint8_t i, const uint8_t s) {
 /**
  * A `init_function_t` that sets all values to `i + s`.
  */
-static uint8_t init_add(const uint8_t i, const uint8_t s) {
+static uint8_t init_add(const size_t i, const size_t s) {
     assume(i <= ROUNDS);
     assume(s <= ROUNDS);
 
@@ -172,7 +172,7 @@ static uint8_t init_add(const uint8_t i, const uint8_t s) {
 /**
  * A `init_function_t` that sets all values to `i * s` with `+ 1` for more mixing.
  */
-static uint8_t init_mul(const uint8_t i, const uint8_t s) {
+static uint8_t init_mul(const size_t i, const size_t s) {
     assume(i <= ROUNDS);
     assume(s <= ROUNDS);
 
@@ -183,7 +183,7 @@ static uint8_t init_mul(const uint8_t i, const uint8_t s) {
 /**
  * A `init_function_t` that sets all values to `i**2 + s**2`.
  */
-static uint8_t init_square(const uint8_t i, const uint8_t s) {
+static uint8_t init_square(const size_t i, const size_t s) {
     assume(i <= ROUNDS);
     assume(s <= ROUNDS);
 
@@ -215,14 +215,14 @@ static uint8_t init_square(const uint8_t i, const uint8_t s) {
 static uint32_t limited_dfs(
     const sgx_enclave_id_t eid,
     sgx_status_t *NONNULL status,
-    const uint8_t start,
-    const uint8_t depth
+    const size_t start,
+    const size_t max_depth
 ) {
-    if likely (depth == 0) {
+    if likely (max_depth == 0) {
         const NONNULL init_function_t init[] = {init_zero, init_mul, init_add, init_square};
 
         uint32_t total_wins = 0;
-        for (unsigned i = 0; i < sizeof(init) / sizeof(init[0]); i++) {
+        for (size_t i = 0; i < sizeof(init) / sizeof(init[0]); i++) {
             const uint32_t wins = greedy(eid, status, start, init[i]);
             if unlikely (wins == UINT32_MAX) {
                 return UINT32_MAX;
@@ -237,7 +237,7 @@ static uint32_t limited_dfs(
     uint32_t wins[3] = {UINT32_MAX, UINT32_MAX, UINT32_MAX};
     for (uint8_t d = 0; d <= 2; d++) {
         answers[start] = d;
-        wins[d] = limited_dfs(eid, status, start + 1, depth - 1);
+        wins[d] = limited_dfs(eid, status, start + 1, max_depth - 1);
         if unlikely (wins[d] == UINT32_MAX) {
             return UINT32_MAX;
         }
@@ -265,16 +265,16 @@ static uint32_t limited_dfs(
  * total, up to 13_032 calls to `ecall_pedra_papel_tesoura` are made.
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
-    for (uint8_t start = 0; start < ROUNDS; start++) {
+    for (size_t start = 0; start < ROUNDS; start++) {
         sgx_status_t status = SGX_SUCCESS;
 
-        const size_t total_wins = limited_dfs(eid, &status, start, 2);
+        const size_t total_wins = limited_dfs(eid, &status, start, /*max_depth=*/2);
         if likely (total_wins == UINT32_MAX) {
             return status;
         }
 
 #ifdef DEBUG
-        printf("Challenge 5: answers[%" PRIu8 "] = %" PRIu8 "\n", start, answers[start]);
+        printf("Challenge 5: answers[%zu] = %" PRIu8 "\n", start, answers[start]);
 #endif
     }
 

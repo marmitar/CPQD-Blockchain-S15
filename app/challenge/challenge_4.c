@@ -174,13 +174,13 @@ extern sgx_status_t challenge_4(sgx_enclave_id_t eid) {
     int y[3] = {INT_MIN, INT_MIN, INT_MIN};
 
     // collect some points for the linear solution
-    for (unsigned i = 0; i < 3; i++) {
+    for (size_t i = 0; i < 3; i++) {
         const sgx_status_t status = ecall_polinomio_secreto(eid, &(y[i]), x[i]);
         if unlikely (status != SGX_SUCCESS) {
             return status;
         }
 #ifdef DEBUG
-        printf("Challenge 4: x%u = %d, y%u = %d\n", i + 1, x[i], i + 1, y[i]);
+        printf("Challenge 4: x%zu = %d, y%zu = %d\n", i + 1, x[i], i + 1, y[i]);
 #endif
     }
 
