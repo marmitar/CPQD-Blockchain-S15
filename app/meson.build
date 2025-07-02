@@ -7,6 +7,7 @@ challenges = files(
     'challenge/challenge_1.c',
     'challenge/challenge_2.c',
     'challenge/challenge_3.c',
+    'challenge/challenge_4.c',
 )
 
 app = executable('app',

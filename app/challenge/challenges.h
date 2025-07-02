@@ -47,4 +47,16 @@ sgx_status_t challenge_2(sgx_enclave_id_t eid);
  */
 sgx_status_t challenge_3(sgx_enclave_id_t eid);
 
+[[gnu::nothrow, gnu::leaf]]
+/**
+ * Challenge 4: Secret Polynomial
+ * ------------------------------
+ *
+ * The `ecall_polinomio_secreto` ecall receives a number `x` as a parameter and returns the result of the quadratic
+ * equation `(ax^2 + bx + c) % p`, where `a`, `b`, and `c` are secret values and `p` is the prime number
+ * [2147483647](https://en.wikipedia.org/wiki/2,147,483,647) (the largest 32-bit prime). You can call this ocall
+ * with any value except zero; if you pass zero, the call will fail. Your task is to discover `a`, `b`, and `c`.
+ */
+sgx_status_t challenge_4(sgx_enclave_id_t eid);
+
 #endif  // APP_CHALLENGES_H

@@ -54,56 +54,6 @@ extern void ocall_print_string(const char *str) {
     }
 }
 
-/* CHALLENGE 4 */
-
-struct coeff {
-    int a;
-    int b;
-    int c;
-};
-
-/** Evaluate the polynomial on x=1, x=2 and x=3, then solve the linear equation for the coefficients. */
-static struct coeff desafio_4_coefficients(void) {
-    enable_enclave_output = false;
-
-    // a + b + c = y1
-    int y1 = 0;
-    sgx_status_t ret = ecall_polinomio_secreto(global_eid, &y1, /*x=*/1);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
-        abort();
-    }
-
-    // 4a + 2b + c = y2
-    int y2 = 0;
-    ret = ecall_polinomio_secreto(global_eid, &y2, /*x=*/2);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
-        abort();
-    }
-
-    // 9a + 3b + c = y3
-    int y3 = 0;
-    ret = ecall_polinomio_secreto(global_eid, &y3, /*x=*/3);
-    if unlikely (ret != SGX_SUCCESS) {
-        print_error_message(ret);
-        abort();
-    }
-
-    // 3a + b = y2 - y1
-    // 5a + b = y3 - y2
-    // 2a = y3 - y2 - (y2 - y1) = y3 - 2 y2 + y1
-    int a = (y3 - 2 * y2 + y1) / 2;
-    // 5a + b = y3 - y2
-    const int mb = 5;
-    int b = y3 - y2 - mb * a;
-    // a + b + c = y1
-    int c = y1 - a - b;
-
-    enable_enclave_output = true;
-    return (struct coeff) {.a = a, .b = b, .c = c};
-}
-
 /* CHALLENGE 5 */
 
 #define ROUNDS 20
@@ -278,20 +228,17 @@ int SGX_CDECL main(void) {
         ok = false;
     }
 
-    /* DESAFIO 4: ecall_polinomio_secreto */
-    struct coeff poly = desafio_4_coefficients();
-    printf("Info: Secret polynomial: a=%d, b=%d, c=%d\n", poly.a, poly.b, poly.c);
-
-    int status = -1;
-    ret = ecall_verificar_polinomio(global_eid, &status, poly.a, poly.b, poly.c);
+    /* CHALLENGE 4: Secret Polynomial */
+    ret = challenge_4(global_eid);
     if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
-        abort();
+        ok = false;
     }
-    ok = likely(ok) && (status != 0);
 
     /* DESAFIO 5: ecall_pedra_papel_tesoura */
     desafio_5_find_solution();
+
+    int status = -1;
     ret = ecall_pedra_papel_tesoura(global_eid, &status);
     if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
