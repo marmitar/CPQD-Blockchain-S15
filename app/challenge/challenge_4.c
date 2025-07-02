@@ -39,7 +39,7 @@ static int fromP(const uint32_t n) {
     return ((int) (n % P)) - ((int) P);
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
 /**
  * Does `(a + b) % P` without overflowing or underflowing.
  */
@@ -49,7 +49,7 @@ static uint32_t addP(const uint32_t a, const uint32_t b) {
     return (uint32_t) ((aa + bb) % P);
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
 /**
  * Does `(a - b) % P` without overflowing or underflowing.
  */
@@ -59,7 +59,7 @@ static uint32_t subP(const uint32_t a, const uint32_t b) {
     return (uint32_t) ((aa + P - bb) % P);
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
 /**
  * Does `(a * b) % P` without overflowing or underflowing.
  */

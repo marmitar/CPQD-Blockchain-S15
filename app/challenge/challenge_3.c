@@ -32,7 +32,7 @@ static word_t make_word(char letter) {
     return word;
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
 /**
  * Replace `secret` with the given `letter` in all positions modified in `guess`, returning the updated `secret`.
  */

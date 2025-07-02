@@ -35,7 +35,7 @@ extern unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
     return answers[round - 1];
 }
 
-[[nodiscard("error must be checked"), gnu::nonnull(2)]]
+[[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
 /**
  * Runs `ecall_pedra_papel_tesoura` and validate its return value.
  *
@@ -68,7 +68,7 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
  */
 typedef uint8_t (*init_function_t)(size_t position, size_t start);
 
-[[nodiscard("error must be checked"), gnu::nonnull(2, 4)]]
+[[nodiscard("error must be checked"), gnu::nonnull(2, 4), gnu::hot]]
 /**
  * (Partial) Greedy Hill Climbing solution
  * ---------------------------------------
@@ -144,7 +144,7 @@ static uint32_t greedy(
     return total_wins;
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
 /**
  * A `init_function_t` that sets all values to zero.
  */
@@ -157,7 +157,7 @@ static uint8_t init_zero(const size_t i, const size_t s) {
     return 0;
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
 /**
  * A `init_function_t` that sets all values to `i + s`.
  */
@@ -168,7 +168,7 @@ static uint8_t init_add(const size_t i, const size_t s) {
     return (uint8_t) (i + s) % 3U;
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
 /**
  * A `init_function_t` that sets all values to `i * s` with `+ 1` for more mixing.
  */
@@ -179,7 +179,7 @@ static uint8_t init_mul(const size_t i, const size_t s) {
     return (uint8_t) (i * s + 1) % 3U;
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[gnu::const, nodiscard("pure function"), gnu::hot]]
 /**
  * A `init_function_t` that sets all values to `i**2 + s**2`.
  */
@@ -190,7 +190,7 @@ static uint8_t init_square(const size_t i, const size_t s) {
     return (uint8_t) (i * i + s * s) % 3U;
 }
 
-[[nodiscard("error must be checked"), gnu::nonnull(2)]]
+[[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
 /**
  * Limited Depth-First Search solution
  * -----------------------------------
