@@ -1,6 +1,6 @@
 // clang-format off
-#if __STDC_VERSION__ < 202300L
-#error "This code is compliant with C23 or later only."
+#if __STDC_VERSION__ < 202000L
+#error "This code is compliant with C2x/C23 or later only."
 #endif
 // clang-format on
 

@@ -1,0 +1,49 @@
+name: Challenge
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: Challenge Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '>= 3.13'
+
+      - name: Install Intel SGX SDK (simulation only)
+        run: |
+          wget https://download.01.org/intel-sgx/sgx-linux/2.26/distro/ubuntu24.04-server/sgx_linux_x64_sdk_2.26.100.0.bin
+          chmod +x sgx_linux_x64_sdk_2.26.100.0.bin
+          sudo ./sgx_linux_x64_sdk_2.26.100.0.bin --prefix /opt/intel
+
+      - name: Install Meson
+        id: deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'meson >= 1.4.0' 'ninja >= 1'
+
+      - name: Use GCC-14
+        run: |
+          sudo update-alternatives \
+              --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 \
+              --slave   /usr/bin/g++ g++ /usr/bin/g++-14
+
+      - name: Meson setup
+        id: setup
+        run: meson setup build
+
+      - name: Build
+        id: build
+        run: meson compile -C build
+
+      - name: Test
+        id: test
+        run: meson test -C build --verbose

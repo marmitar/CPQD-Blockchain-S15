@@ -1,7 +1,7 @@
 project('trabalho-pratico-intel-sgx', 'c',
-    version: '0.1.0',
+    version: '1.0.0',
     license: 'AGPL-3.0-or-later',
-    meson_version: '>= 1.4',
+    meson_version: '>= 1.3',
     default_options: {
         'c_std': 'c23',
         'buildtype': 'release',
