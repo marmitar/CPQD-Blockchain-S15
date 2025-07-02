@@ -3,7 +3,7 @@
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
-SGX_DEBUG ?= 1
+SGX_DEBUG ?= 0
 
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
@@ -50,8 +50,8 @@ else
 endif
 
 APP_NAME := main
-APP_SRCS := app/app.c app/error.c
-APP_HEADERS := app/app.h app/error.h
+APP_SRCS := app/app.c app/error.c app/challenge/challenge_1.c $(wildcard app/challenge/challenge_[1-5].c)
+APP_HEADERS := app/defines.h app/error.h app/challenge/challenges.h
 APP_OBJS := $(APP_SRCS:.c=.o)
 APP_INCLUDES := -Iapp -I$(SGX_SDK)/include
 APP_CFLAGS := -fPIC -Wno-attributes $(APP_INCLUDES)
@@ -70,8 +70,6 @@ else
 endif
 
 ######## Enclave Settings ########
-
-SIGNED_ENCLAVE_NAME := enclave.signed.so
 
 ifeq ($(SGX_MODE), HW)
 ifeq ($(SGX_DEBUG), 1)
@@ -96,7 +94,7 @@ endif
 all: .config_$(BUILD_MODE)_$(SGX_ARCH)
 	@$(MAKE) target
 
-target: $(APP_NAME) $(SIGNED_ENCLAVE_NAME)
+target: $(APP_NAME)
 ifeq ($(BUILD_MODE), HW_DEBUG)
 	@echo "The project has been built in debug hardware mode."
 else ifeq ($(BUILD_MODE), SIM_DEBUG)
@@ -116,7 +114,7 @@ ifneq ($(BUILD_MODE), HW_RELEASE)
 endif
 
 .config_$(BUILD_MODE)_$(SGX_ARCH):
-	@rm -f .config_* $(APP_NAME)  $(SIGNED_ENCLAVE_NAME) $(APP_OBJS) app/enclave_u.* $(ENCLAVE_OBJS) enclave/enclave_t.*
+	@rm -f .config_* $(APP_NAME) $(APP_OBJS) app/enclave_u.* $(ENCLAVE_OBJS) enclave/enclave_t.*
 	@touch .config_$(BUILD_MODE)_$(SGX_ARCH)
 
 ######## App Objects ########
@@ -130,7 +128,7 @@ app/enclave_u.o: app/enclave_u.c
 	@$(CC) $(SGX_CFLAGS) $(APP_CFLAGS) -c $< -o $@
 	@echo "CC   <=  $<"
 
-app/%.o: app/%.c app/enclave_u.h
+app/%.o: app/%.c $(APP_HEADERS) app/enclave_u.h
 	@$(CC) $(SGX_CFLAGS) $(APP_CFLAGS) -c $< -o $@
 	@echo "CC  <=  $<"
 
@@ -140,13 +138,10 @@ $(APP_NAME): app/enclave_u.o $(APP_OBJS)
 
 ######## Enclave Object ########
 
-$(SIGNED_ENCLAVE_NAME): enclave/$(SIGNED_ENCLAVE_NAME)
-	@cp $< $@
-
 .PHONY: clean format
 
 clean:
-	@rm -f .config_* $(APP_NAME) $(SIGNED_ENCLAVE_NAME) $(APP_OBJS) app/enclave_u.* $(ENCLAVE_OBJS) enclave/enclave_t.*
+	@rm -f .config_* $(APP_NAME) $(APP_OBJS) app/enclave_u.* $(ENCLAVE_OBJS) enclave/enclave_t.*
 
 format:
 	@for filename in $(APP_SRCS) $(APP_HEADERS) $(ENCLAVE_SRCS) $(ENCLAVE_HEADERS); do \

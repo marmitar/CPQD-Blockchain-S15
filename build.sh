@@ -33,7 +33,7 @@ declare -a SGX_CFLAGS=(
     '-std=c23'
 )
 declare -a APP_CFLAGS=(
-   -fPIC -Wno-attributes -IApp "-I${SGX_SDK}/include" -DNDEBUG -UEDEBUG -UDEBUG
+   -fPIC -Wno-attributes -Iapp "-I${SGX_SDK}/include" -DNDEBUG -UEDEBUG -UDEBUG
 )
 # artifacts generated during compilation
 declare -a GENERATED_FILES=(
@@ -68,7 +68,10 @@ popd
 $CC "${SGX_CFLAGS[@]}" "${APP_CFLAGS[@]}" -c app/enclave_u.c -o app/enclave_u.o
 $CC "${SGX_CFLAGS[@]}" "${APP_CFLAGS[@]}" -c app/error.c -o app/error.o
 $CC "${SGX_CFLAGS[@]}" "${APP_CFLAGS[@]}" -c app/app.c -o app/app.o
-$CC app/enclave_u.o app/error.o app/app.o -o main "-L${SGX_SDK}/lib64" -lsgx_urts_sim -lpthread
+for c in 1 2 3 4 5; do
+    $CC "${SGX_CFLAGS[@]}" "${APP_CFLAGS[@]}" -c app/challenge/challenge_$c.c -o app/challenge/challenge_$c.o
+done
+$CC app/enclave_u.o app/error.o app/app.o app/challenge/challenge_*.o -o main "-L${SGX_SDK}/lib64" -lsgx_urts_sim -lpthread
 
 ################
 # SIGN ENCLAVE #
