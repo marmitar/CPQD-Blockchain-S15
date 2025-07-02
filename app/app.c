@@ -14,9 +14,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "defines.h"
+#include "./challenge/challenges.h"
+#include "./defines.h"
+#include "./error.h"
 #include "enclave_u.h"
-#include "error.h"
 
 #if !defined(ENCLAVE_FILENAME)
 #    define ENCLAVE_FILENAME "enclave.signed.so"
@@ -343,20 +344,18 @@ int SGX_CDECL main(void) {
 
     bool ok = true;
 
-    /* DESAFIO 1: ecall_verificar_aluno */
-    const char name[] = "Tiago De Paula Alves";
-    int status = -1;
-    sgx_status_t ret = ecall_verificar_aluno(global_eid, &status, name);
+    /* CHALLENGE 1: Call the enclave */
+    sgx_status_t ret = challenge_1(global_eid);
     if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
-        abort();
+        ok = false;
     }
-    ok = likely(ok) && (status == 0);
 
     /* DESAFIO 2: ecall_verificar_senha */
     const unsigned password = desafio_2_senha();
     printf("Info: Password = %u\n", password);
 
+    int status = -1;
     ret = ecall_verificar_senha(global_eid, &status, password);
     if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
