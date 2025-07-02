@@ -28,4 +28,23 @@ sgx_status_t challenge_1(sgx_enclave_id_t eid);
  */
 sgx_status_t challenge_2(sgx_enclave_id_t eid);
 
+[[gnu::nothrow, gnu::leaf]]
+/**
+ * Challenge 3: Secret Sequence
+ * ----------------------------
+ *
+ * The `ecall_palavra_secreta` ecall receives a `char[20]` array of 20 letters as a parameter. The enclave has a
+ * **sequence of 20 secret letters** stored within it, composed only of **uppercase letters**. Every time you call
+ * this enclave passing an array of letters, it will replace ALL the letters you got wrong in your array with the
+ * character `-` (hyphen), but it will leave the letters in the positions you got right intact. Example:
+ *
+ * - You called `ecall_palavra_secreta` with the character array `ABCDEZHIKLMNOPQRSTVX`
+ * - The enclave changed the array, and now it is equal to `---DE--I---N------V-`, which means you got 5 letters
+ *  correct.
+ * - You kept the letters you got right and now sent `QAEDESEIIUJNLUMMWDVJ`
+ * - The enclave changed the array, and now it is equal to `---DE--I---N----W-V-`. You found a new letter!
+ * - And so on, until you discover the entire secret phrase.
+ */
+sgx_status_t challenge_3(sgx_enclave_id_t eid);
+
 #endif  // APP_CHALLENGES_H

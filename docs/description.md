@@ -55,7 +55,7 @@ of 20 secret letters** stored within it, composed only of **uppercase letters**.
 passing an array of letters, it will replace ALL the letters you got wrong in your array with the character `-`
 (hyphen), but it will leave the letters in the positions you got right intact. Example:
 
-- You called **ecall_palavra_secreta** with the character array `ABCDEZHIKLMNOPQRSTVX`
+- You called `ecall_palavra_secreta` with the character array `ABCDEZHIKLMNOPQRSTVX`
 - The enclave changed the array, and now it is equal to `---DE--I---N------V-`, which means you got 5 letters correct.
 - You kept the letters you got right and now sent `QAEDESEIIUJNLUMMWDVJ`
 - The enclave changed the array, and now it is equal to `---DE--I---N----W-V-`. You found a new letter!

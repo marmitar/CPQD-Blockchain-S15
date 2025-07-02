@@ -54,67 +54,6 @@ extern void ocall_print_string(const char *str) {
     }
 }
 
-/* CHALLENGE 3 */
-
-#define WORD 20
-
-struct word {
-    char s[WORD];
-};
-
-static const char LETTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-[[gnu::const]]
-/** Guess word with all positions set to 'A'. */
-static struct word desafio_3_first_guess(void) {
-    struct word w = {.s = ""};
-    for (unsigned i = 0; i < WORD; i++) {
-        w.s[i] = LETTERS[0];
-    }
-    return w;
-}
-
-static int desafio_3_update_guess(struct word *w, struct word t) {
-    for (unsigned i = 0; i < WORD; i++) {
-        if (t.s[i] != w->s[i]) {
-            if likely (w->s[i] < 'Z') {
-                w->s[i]++;
-            } else {
-                return -1;
-            }
-        }
-    }
-    return 0;
-}
-
-/** Increment all wrong letters until the solution is found. */
-static struct word desafio_3_secret_word(void) {
-    struct word w = desafio_3_first_guess();
-
-    enable_enclave_output = false;
-    while (true) {
-        struct word t = w;
-
-        int status = -1;
-        sgx_status_t ret = ecall_palavra_secreta(global_eid, &status, t.s);
-        if unlikely (ret != SGX_SUCCESS) {
-            print_error_message(ret);
-            abort();
-        }
-
-        if (status == 0) {
-            enable_enclave_output = true;
-            return w;
-        }
-
-        status = desafio_3_update_guess(&w, t);
-        if unlikely (status != 0) {
-            enable_enclave_output = true;
-            return (struct word) {.s = "<not found>"};
-        }
-    }
-}
-
 /* CHALLENGE 4 */
 
 struct coeff {
@@ -332,22 +271,18 @@ int SGX_CDECL main(void) {
         ok = false;
     }
 
-    /* DESAFIO 3: ecall_palavra_secreta */
-    struct word secret = desafio_3_secret_word();
-    printf("Info: Secret word = %20s\n", secret.s);
-
-    int status = -1;
-    ret = ecall_palavra_secreta(global_eid, &status, secret.s);
+    /* CHALLENGE 3: Secret Sequence */
+    ret = challenge_3(global_eid);
     if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
-        abort();
+        ok = false;
     }
-    ok = likely(ok) && (status == 0);
 
     /* DESAFIO 4: ecall_polinomio_secreto */
     struct coeff poly = desafio_4_coefficients();
     printf("Info: Secret polynomial: a=%d, b=%d, c=%d\n", poly.a, poly.b, poly.c);
 
+    int status = -1;
     ret = ecall_verificar_polinomio(global_eid, &status, poly.a, poly.b, poly.c);
     if unlikely (ret != SGX_SUCCESS) {
         print_error_message(ret);
