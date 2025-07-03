@@ -11,11 +11,13 @@ challenges = files(
     'challenge/challenge_5.c',
 )
 
+math = cc.find_library('m', required : false)
+
 app = executable('app',
     files('app.c', 'error.c'),
     challenges,
     untrusted_enclave,
-    dependencies: [sgx_urts, threads],
+    dependencies: [sgx_urts, threads, math],
     link_args: ['-Wl,-z,pack-relative-relocs'],
 )
 
