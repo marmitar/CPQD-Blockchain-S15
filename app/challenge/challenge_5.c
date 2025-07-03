@@ -126,10 +126,10 @@ static double square(double x) {
 
 [[gnu::const, nodiscard("pure function")]]
 /**
- * Estimate sample size required for the given `confidence` and `power` when choosing the correct value for a position.
- * This is based on classical inference using two-sided tests.
+ * Estimate sample size required for the given `confidence` and `power` based on classical inference using
+ * two-sided tests.
  */
-static size_t sample_size(
+static double two_sided_sample_size(
     /**
      * 1 - α, or the likelihood that a Type-I error does not occur.
      */
@@ -152,19 +152,31 @@ static size_t sample_size(
     const double z1a = z(1 - alpha);
     const double z1b = z(power);
 
-    const double n = (2 * square(z1a + z1b) * square(sigma)) / square(delta);
-    return (size_t) ceil(n);
+    return (2 * square(z1a + z1b) * square(sigma)) / square(delta);
 }
 
 [[gnu::const, nodiscard("pure function")]]
 /**
- * Estimate standard deviation for the games assuming a sum of `n` Bernoulli trials for the sequence.
+ * Standard deviation for the Bernoulli distribution.
  */
-static double sigma(const size_t n) {
-    /** Winning probability for each position. */
-    const double p = 1.0 / 3.0;
+static double sigma(const double p) {
+    return sqrt(p * (1.0 - p));
+}
 
-    return sqrt((double) n * (p * (1.0 - p)));
+[[gnu::const, nodiscard("pure function")]]
+/**
+ * Estimate sample size required for the given `confidence` and `power` when choosing the correct value for a position.
+ */
+static size_t sample_size(const double confidence, const double power, const size_t start) {
+    /** Correct choice always scores, and drawing or losing never does. So 1 score higher is expected. */
+    static const double DELTA = 1;
+    /** Winning probability for each position. */
+    static const double P = 1.0 / 3.0;
+
+    // sample size multiplier
+    const double sn = two_sided_sample_size(confidence, power, sigma(P), DELTA);
+    // we abuse the fact that Var[n bernoulli] = n Var[bernoulli]
+    return (size_t) ceil((double) (ROUNDS - start) * sn);
 }
 
 [[gnu::const, nodiscard("pure function")]]
@@ -238,10 +250,8 @@ static uint32_t pick_position(
     static const double CONFIDENCE = 0.95;
     /** 10% chance of not picking the best value when there's one. */
     static const double POWER = 0.90;
-    /** Correct choice always scores, and drawing or losing never does. So 1 score higher is expected. */
-    static const double DELTA = 1;
 
-    const size_t n = sample_size(CONFIDENCE, POWER, sigma(ROUNDS - start), DELTA);
+    const size_t n = sample_size(CONFIDENCE, POWER, start);
 
     uint32_t wins[3] = {0, 0, 0};
     for (uint8_t d = 0; d < 3; d++) {
