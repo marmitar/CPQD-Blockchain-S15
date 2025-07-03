@@ -188,7 +188,7 @@ extern sgx_status_t challenge_4(sgx_enclave_id_t eid) {
         solve_polynomial_coefficients(toP(x[0]), toP(y[0]), toP(x[1]), toP(y[1]), toP(x[2]), toP(y[2]));
 
 #ifdef DEBUG
-    printf("Challenge 4: a = %d, b = %i, c = %i\n", poly.a, poly.b, poly.c);
+    printf("Challenge 4: a = %d, b = %d, c = %d\n", poly.a, poly.b, poly.c);
 #endif
 
     int rv = 0;

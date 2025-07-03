@@ -50,7 +50,7 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
     int wins = INT_MIN;
 
     sgx_status_t rstatus = ecall_pedra_papel_tesoura(eid, &wins);
-    if unlikely (rstatus != SGX_SUCCESS || wins < 0 || wins >= UINT8_MAX) {
+    if unlikely (rstatus != SGX_SUCCESS) {
         *status = rstatus;
         return UINT8_MAX;
     } else if unlikely (wins < 0 || wins > ROUNDS) {
