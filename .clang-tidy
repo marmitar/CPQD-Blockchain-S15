@@ -8,7 +8,7 @@ Checks: '
   -modernize-use-nullptr,
   -modernize-macro-to-enum,
   bugprone-*,
-
+  -bugprone-easily-swappable-parameters,
   cert-*-c,
   concurrency-*,
   misc-confusable-identifiers,
@@ -59,7 +59,9 @@ CheckOptions:
   bugprone-easily-swappable-parameters.QualifiersMix: false
   bugprone-easily-swappable-parameters.ModelImplicitConversions: false
   bugprone-easily-swappable-parameters.MinimumLength: 3
+  bugprone-reserved-identifier.AllowedIdentifiers: _GNU_SOURCE
   cert-dcl16-c.NewSuffixes: 'L;LL;LU;LLU'
+  cert-dcl37-c.AllowedIdentifiers: _GNU_SOURCE
   cert-err33-c.AllowCastToVoid: true
   cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField: false
   cert-str34-c.DiagnoseSignedUnsignedCharComparisons: false

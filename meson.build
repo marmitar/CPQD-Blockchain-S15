@@ -57,7 +57,6 @@ if warning_level >= 1
         checked: 'warn',
     ) + cc.get_supported_arguments(
         '-Wjump-misses-init', # GCC only
-        '-Wunsuffixed-float-constants', # GCC only
         '-Wstringop-overflow=4', # GCC only
         '-Wno-nullability-extension', # Clang only
         checked: 'off',

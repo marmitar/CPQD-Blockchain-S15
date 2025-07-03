@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../defines.h"
 #include "./challenges.h"
@@ -71,12 +72,12 @@ static double erfinv_approx(const double x) {
     assume(isgreater(x, -1) && isless(x, 1));
 
     const double xa = fabs(x);
-    const double lxa = log(1 - xa * xa);
+    const double l1xa = log(1 - xa * xa);
 
     static const double a = (8 * (M_PI - 3)) / (3 * M_PI * (4 - M_PI));
 
-    const double v = 2 / (M_PI * a) + (1.0 / 2) * lxa;
-    const double y = -v + sqrt(v * v - (1.0 / a) * lxa);
+    const double v = 2 / (M_PI * a) + (1.0 / 2) * l1xa;
+    const double y = -v + sqrt(v * v - (1.0 / a) * l1xa);
 
     return copysign(y, x);
 }
@@ -95,12 +96,11 @@ static double erfinv(const double x) {
     }
 
     static const size_t ITERATIONS = 6;
-    const double M_SQRTPI = sqrt(M_PI);
 
     double y = erfinv_approx(x);
     for (size_t i = 0; i < ITERATIONS; i++) {
         const double f = erf(y) - x;
-        const double fp = (2 / M_SQRTPI) * exp(-y * y);
+        const double fp = (2 / sqrt(M_PI)) * exp(-y * y);
         y -= f / fp;
     }
     return y;
@@ -133,11 +133,11 @@ static size_t sample_size(
     /**
      * 1 - α, or the likelihood that a Type-I error does not occur.
      */
-    const double confidence,  // NOLINT(bugprone-easily-swappable-parameters)
+    const double confidence,
     /**
      * 1 - β, or the likelihood that a Type-II error does not occur.
      */
-    const double power,  // NOLINT(bugprone-easily-swappable-parameters)
+    const double power,
     /**
      * (Assumed) Standard deviation of the sample.
      */
@@ -147,7 +147,7 @@ static size_t sample_size(
      */
     const double delta
 ) {
-    // Bonferroni-safe significance
+    // Bonferroni-safe significance when split over two tails (should be 3, but meh)
     const double alpha = (1 - confidence) / 2;
     const double z1a = z(1 - alpha);
     const double z1b = z(power);
@@ -158,7 +158,7 @@ static size_t sample_size(
 
 [[gnu::const, nodiscard("pure function")]]
 /**
- * Estimate standard deviation for the games assuming binomial distribution for the sequence.
+ * Estimate standard deviation for the games assuming a sum of `n` Bernoulli trials for the sequence.
  */
 static double sigma(const size_t n) {
     /** Winning probability for each position. */
@@ -167,15 +167,33 @@ static double sigma(const size_t n) {
     return sqrt((double) n * (p * (1.0 - p)));
 }
 
-[[nodiscard("useless call otherwise")]]
+[[gnu::const, nodiscard("pure function")]]
 /**
- * Generate an evenly distributed guess between `0` (rock), `1` (paper), or `2` (scissors).
+ * Initialize a PRNG state with pre-defined seeds.
  */
-static uint8_t random_guess(void) {
-    static const int THRESHOLD = RAND_MAX - RAND_MAX % 3;
+static struct drand48_data seed_random_state(void) {
+    /** Randomly generated fixed seed (`openssl rand -hex 6`). */
+    static const uint16_t SEED[3] = {0xdf4b, 0x9253, 0x1eec};
+
+    struct drand48_data state = {0};
+    const int rv = seed48_r((uint16_t[3]) {SEED[0], SEED[1], SEED[2]}, &state);
+    assume(rv == 0);
+
+    return state;
+}
+
+[[nodiscard("useless call otherwise"), gnu::hot]]
+/**
+ * Generate an evenly distributed guess between `0` (rock), `1` (paper), or `2` (scissors) via rejection sampling.
+ */
+static uint8_t random_guess(struct drand48_data *NONNULL random_state) {
+    static const long LRAND48_MAX = (1L << 31) - 1;
+    static const long THRESHOLD = LRAND48_MAX - LRAND48_MAX % 3;
 
     while (true) {
-        const int value = rand();  // NOLINT(cert-msc30-c, concurrency-mt-unsafe)
+        long value = -1;
+        const int rv = lrand48_r(random_state, &value);
+        assume(rv == 0);
         assume(value >= 0);
 
         if likely (value < THRESHOLD) {
@@ -188,9 +206,9 @@ static uint8_t random_guess(void) {
 /**
  * Populate the last `ROUNDS - start` positions in `answers` with random guesses.
  */
-static void generate_random_answers_from(const size_t start) {
+static void generate_random_answers_from(struct drand48_data *NONNULL random_state, const size_t start) {
     for (size_t i = start; i < ROUNDS; i++) {
-        answers[i] = random_guess();
+        answers[i] = random_guess(random_state);
     }
 }
 
@@ -210,12 +228,17 @@ static void generate_random_answers_from(const size_t start) {
  * Returns the total number of wins for all checked `answers`, or `UINT32_MAX` if a solution was found. In the case of
  * errors, `UINT32_MAX` is also returned to stop the solution and an error code is written to `status`
  */
-static uint32_t pick_position(const sgx_enclave_id_t eid, sgx_status_t *NONNULL status, const size_t start) {
+static uint32_t pick_position(
+    const sgx_enclave_id_t eid,
+    sgx_status_t *NONNULL status,
+    struct drand48_data *NONNULL random_state,
+    const size_t start
+) {
     /** 5% chance of assuming a value is better when all are equal. */
     static const double CONFIDENCE = 0.95;
     /** 10% chance of not picking the best value when there's one. */
     static const double POWER = 0.90;
-    /** Correct choice always scores, and wrong ones never does. So 1 score higher is expected. */
+    /** Correct choice always scores, and drawing or losing never does. So 1 score higher is expected. */
     static const double DELTA = 1;
 
     const size_t n = sample_size(CONFIDENCE, POWER, sigma(ROUNDS - start), DELTA);
@@ -224,7 +247,7 @@ static uint32_t pick_position(const sgx_enclave_id_t eid, sgx_status_t *NONNULL 
     for (uint8_t d = 0; d < 3; d++) {
         answers[start] = d;
         for (size_t k = 0; k < n; k++) {
-            generate_random_answers_from(start + 1);
+            generate_random_answers_from(random_state, start + 1);
 
             const uint8_t current_wins = check_answers(eid, status);
             if unlikely (current_wins == UINT8_MAX) {
@@ -249,21 +272,19 @@ static uint32_t pick_position(const sgx_enclave_id_t eid, sgx_status_t *NONNULL 
  * Challenge 5: Rock, Paper, Scissors
  * ----------------------------------
  *
- * Search for a winning rock, paper, scissors sequence using a mix of Depth Limited Search and Hill Climbing. For each
- * select position, all three values are tested in multiple different configurations, and the one with highest total
- * wins is selected. This is likely to be the correct result, because each correct position will yield more wins then
- * the other two on average, assuming the remaining rounds are indistinguishable from random (i.e. it's a PRNG). In
- * total, up to 2979 calls to `ecall_pedra_papel_tesoura` are made.
+ * Search for a winning rock, paper, scissors sequence using randomly generated guesses and statistical inference. For
+ * each select position, all three values are tested in multiple different configurations, and the one with highest
+ * total wins is selected. This is likely to be the correct result, because each correct position will yield more wins
+ * then the other two on average, assuming the remaining rounds are indistinguishable from random (i.e. it's a PRNG).
+ * In total, up to 2979 calls to `ecall_pedra_papel_tesoura` are made.
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
-    /** Randomly generated fixed seed (`openssl rand -hex 4`). */
-    static const unsigned SEED = 0x23'20'c5'da;
-    srand(SEED);  // NOLINT(cert-msc32-c)
+    struct drand48_data random_state = seed_random_state();
 
     for (size_t start = 0; start < ROUNDS; start++) {
         sgx_status_t status = SGX_SUCCESS;
 
-        const uint32_t total_wins = pick_position(eid, &status, start);
+        const uint32_t total_wins = pick_position(eid, &status, &random_state, start);
         if likely (total_wins == UINT32_MAX) {
             return status;
         }
