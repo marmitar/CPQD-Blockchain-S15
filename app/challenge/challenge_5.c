@@ -170,13 +170,15 @@ static double sigma(const double p) {
 static size_t sample_size(const double confidence, const double power, const size_t start) {
     /** Correct choice always scores, and drawing or losing never does. So 1 score higher is expected. */
     static const double DELTA = 1;
-    /** Winning probability for each position. */
+    /** The probability of winning in a single round. */
     static const double P = 1.0 / 3.0;
 
     // sample size multiplier
     const double sn = two_sided_sample_size(confidence, power, sigma(P), DELTA);
     // we abuse the fact that Var[n bernoulli] = n Var[bernoulli]
-    return (size_t) ceil((double) (ROUNDS - start) * sn);
+    const size_t n = (size_t) ceil((double) (ROUNDS - start - 1) * sn);
+    // sample size can't be zero
+    return likely(n <= 0) ? 1 : n;
 }
 
 [[gnu::const, nodiscard("pure function")]]
@@ -234,7 +236,7 @@ static void generate_random_answers_from(struct drand48_data *NONNULL random_sta
  * aggregate.
  *
  * The sample size `n` is estimated following a two-sided test of `ROUNDS - start` guesses with 1/3 win probability.
- * This value is at most `n = 94`, for `start = 0` and 5% significance value. In total, `3 * n` calls to
+ * This value is at most `n = 100`, for `start = 0` and 5% significance value. In total, `3 * n` calls to
  * `ecall_pedra_papel_tesoura` are made.
  *
  * Returns the total number of wins for all checked `answers`, or `UINT32_MAX` if a solution was found. In the case of
@@ -248,8 +250,8 @@ static uint32_t pick_position(
 ) {
     /** 5% chance of assuming a value is better when all are equal. */
     static const double CONFIDENCE = 0.95;
-    /** 10% chance of not picking the best value when there's one. */
-    static const double POWER = 0.90;
+    /** 7% chance of not picking the best value when there's one. */
+    static const double POWER = 0.93;
 
     const size_t n = sample_size(CONFIDENCE, POWER, start);
 
@@ -282,11 +284,20 @@ static uint32_t pick_position(
  * Challenge 5: Rock, Paper, Scissors
  * ----------------------------------
  *
- * Search for a winning rock, paper, scissors sequence using randomly generated guesses and statistical inference. For
- * each select position, all three values are tested in multiple different configurations, and the one with highest
+ * Search for a winning rock, paper, scissors sequence using randomly generated guesses and statistical inference.
+ *
+ * For each select position, all three values are tested in multiple different configurations, and the one with highest
  * total wins is selected. This is likely to be the correct result, because each correct position will yield more wins
  * then the other two on average, assuming the remaining rounds are indistinguishable from random (i.e. it's a PRNG).
- * In total, up to 2979 calls to `ecall_pedra_papel_tesoura` are made.
+ *
+ * In total, up to 3018 calls to `ecall_pedra_papel_tesoura` are made:
+ *
+ *     Σ_{i=0}^19 3 sample_size(i) = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{1-α}²+z_{1-β}²) σ²/Δ²⌉
+ *                                 = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{0.95}²+z_{0.9}² 2/9⌉
+ *                                 = 3 × (100 + 95 + ... + 6 + 1) = 3018
+ *
+ * This solution is stochastic and has a 99.18% chance of finding the correct sequence in 20 rounds. See
+ * `docs/probabilities.py` for more details on the probabilities.
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
     struct drand48_data random_state = seed_random_state();

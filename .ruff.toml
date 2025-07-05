@@ -1,0 +1,10 @@
+target-version = "py313"
+line-length = 120
+indent-width = 4
+
+[format]
+indent-style = "space"
+quote-style = "single"
+line-ending = "lf"
+docstring-code-format = true
+preview = true
