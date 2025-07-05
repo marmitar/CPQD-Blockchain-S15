@@ -238,23 +238,23 @@ static size_t sample_size(const double confidence, const double power, const siz
     // sample size multiplier
     const double sn = two_sided_sample_size(confidence, power, sigma, DELTA);
     // we abuse the fact that Var[n bernoulli] = n Var[bernoulli]
-    const size_t n = (size_t) ceil((double) (ROUNDS - start - 1) * sn);
+    const size_t n = (size_t) ceil((double) (ROUNDS - start) * sn);
     // sample size can't be zero
     return likely(n <= 0) ? 1 : n;
 }
 
 [[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
 /**
- * Estimate the correct play for position `start` with 95% confidence.
+ * Estimate the correct play for position `position` with 95% confidence.
  *
  * For each of the three possible values, `0` (rock), `1` (paper), or `2` (scissors), this function generates `n`
- * random sub-sequences after `start` and selects the value with most wins in total. The correct value is expected to
+ * random sub-sequences after `position` and selects the value with most wins in total. The correct value is expected to
  * produce 1 more win on average than the other two possibilities, resulting in an expected `n` more wins on the
  * aggregate.
  *
- * The sample size `n` is estimated following a two-sided test of `ROUNDS - start` guesses with 1/3 win probability.
- * This value is at most `n = 99`, for `start = 0` and 5% significance value. In total, `3 * n` calls to
- * `ecall_pedra_papel_tesoura` are made.
+ * The sample size `n` is estimated following a two-sided test of `ROUNDS - position - 1` guesses with 1/3 win
+ * probability. This value is at most `n = 99`, for `position = 0` and 5% significance value. In total, `3 * n`
+ * calls to `ecall_pedra_papel_tesoura` are made.
  *
  * Returns the total number of wins for all checked `answers`, or `UINT32_MAX` if a solution was found. In the case of
  * errors, `UINT32_MAX` is also returned to stop the solution and an error code is written to `status`
@@ -263,21 +263,20 @@ static uint32_t pick_position(
     const sgx_enclave_id_t eid,
     sgx_status_t *NONNULL status,
     struct drand48_data *NONNULL random_state,
-    const size_t start
+    const size_t position
 ) {
     /** 5% chance of assuming a value is better when all are equal. */
     static const double CONFIDENCE = 0.95;
     /** 10% chance of not picking the best value when there's one. */
     static const double POWER = 0.90;
 
-    const size_t n = sample_size(CONFIDENCE, POWER, start);
-    printf("start = %zu, sample size = %zu\n", start, n);
+    const size_t n = sample_size(CONFIDENCE, POWER, position + 1);
 
     uint32_t wins[3] = {0, 0, 0};
     for (uint8_t d = 0; d < 3; d++) {
-        answers[start] = d;
+        answers[position] = d;
         for (size_t k = 0; k < n; k++) {
-            generate_random_answers_from(random_state, start + 1);
+            generate_random_answers_from(random_state, position + 1);
 
             const uint8_t current_wins = check_answers(eid, status);
             if unlikely (current_wins == UINT8_MAX) {
@@ -288,11 +287,11 @@ static uint32_t pick_position(
     }
 
     if (wins[0] >= wins[1] && wins[0] >= wins[2]) {
-        answers[start] = 0;
+        answers[position] = 0;
     } else if (wins[1] >= wins[2]) {
-        answers[start] = 1;
+        answers[position] = 1;
     } else {
-        answers[start] = 2;
+        answers[position] = 2;
     }
 
     return wins[0] + wins[1] + wins[2];
@@ -320,16 +319,21 @@ static uint32_t pick_position(
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
     struct drand48_data random_state = seed_random_state();
 
-    for (size_t start = 0; start < ROUNDS; start++) {
+    for (size_t position = 0; position < ROUNDS; position++) {
         sgx_status_t status = SGX_SUCCESS;
 
-        const uint32_t total_wins = pick_position(eid, &status, &random_state, start);
+        const uint32_t total_wins = pick_position(eid, &status, &random_state, position);
         if likely (total_wins == UINT32_MAX) {
             return status;
         }
 
 #ifdef DEBUG
-        printf("Challenge 5: answers[%zu] = %" PRIu8 ", total wins = %" PRIu32 "\n", start, answers[start], total_wins);
+        printf(
+            "Challenge 5: answers[%zu] = %" PRIu8 ", total wins = %" PRIu32 "\n",
+            position,
+            answers[position],
+            total_wins
+        );
 #endif
     }
 
