@@ -64,56 +64,79 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
 
 [[gnu::const, nodiscard("pure function")]]
 /**
- * Sergei Winitzki's approximation to inverse error function ($erf^{-1}$). Used as starting point for `erfinv`.
- *
- * @see https://www.scribd.com/document/82414963/Winitzki-Approximation-to-Error-Function
- */
-static double erfinv_approx(const double x) {
-    assume(isgreater(x, -1) && isless(x, 1));
-
-    const double xa = fabs(x);
-    const double l1xa = log(1 - xa * xa);
-
-    static const double a = (8 * (M_PI - 3)) / (3 * M_PI * (4 - M_PI));
-
-    const double v = 2 / (M_PI * a) + (1.0 / 2) * l1xa;
-    const double y = -v + sqrt(v * v - (1.0 / a) * l1xa);
-
-    return copysign(y, x);
-}
-
-[[gnu::const, nodiscard("pure function")]]
-/**
- * Newton-Raphson's method for finding the inverse error function ($erf^{-1}$).
- *
- * @see https://en.wikipedia.org/wiki/Newton%27s_method
- */
-static double erfinv(const double x) {
-    if unlikely (islessequal(x, -1)) {
-        return -INFINITY;
-    } else if unlikely (isgreaterequal(x, 1)) {
-        return +INFINITY;
-    }
-
-    static const size_t ITERATIONS = 6;
-
-    double y = erfinv_approx(x);
-    for (size_t i = 0; i < ITERATIONS; i++) {
-        const double f = erf(y) - x;
-        const double fp = (2 / sqrt(M_PI)) * exp(-y * y);
-        y -= f / fp;
-    }
-    return y;
-}
-
-[[gnu::const, nodiscard("pure function")]]
-/**
- * P-Quantile function of the Standard Normal Distribution.
+ * P-Quantile function of the Standard Normal Distribution. Acklam's approximation.
  *
  * @see https://en.wikipedia.org/wiki/Quantile_function
+ * @see https://web.archive.org/web/20150910044729/http://home.online.no/~pjacklam/notes/invnorm/
  */
-static double z(const double p) {
-    return sqrt(2) * erfinv(2 * p - 1);
+static double invnorm(const double p) {
+    if unlikely (islessequal(p, 0)) {
+        return -INFINITY;
+    } else if unlikely (isgreaterequal(p, 1)) {
+        return +INFINITY;
+    } else if unlikely (isnan(p)) {
+        return NAN;
+    }
+    assume(isless(0, p) && isless(p, 1));
+
+    // coefficients in rational approximations
+    static const double a1 = -3.969683028665376e+01;
+    static const double a2 = 2.209460984245205e+02;
+    static const double a3 = -2.759285104469687e+02;
+    static const double a4 = 1.383577518672690e+02;
+    static const double a5 = -3.066479806614716e+01;
+    static const double a6 = 2.506628277459239e+00;
+
+    static const double b1 = -5.447609879822406e+01;
+    static const double b2 = 1.615858368580409e+02;
+    static const double b3 = -1.556989798598866e+02;
+    static const double b4 = 6.680131188771972e+01;
+    static const double b5 = -1.328068155288572e+01;
+
+    static const double c1 = -7.784894002430293e-03;
+    static const double c2 = -3.223964580411365e-01;
+    static const double c3 = -2.400758277161838e+00;
+    static const double c4 = -2.549732539343734e+00;
+    static const double c5 = 4.374664141464968e+00;
+    static const double c6 = 2.938163982698783e+00;
+
+    static const double d1 = 7.784695709041462e-03;
+    static const double d2 = 3.224671290700398e-01;
+    static const double d3 = 2.445134137142996e+00;
+    static const double d4 = 3.754408661907416e+00;
+
+    // break-points
+    static const double p_low = 0.02425;
+    static const double p_high = 1 - p_low;
+
+    double x = NAN;
+    // rational approximation for lower region
+    if (/*isless(0, p) &&*/ isless(p, p_low)) {
+        const double q = sqrt(-2.0 * log(p));
+        x = (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+    }
+    // rational approximation for central region
+    else if (/*islessequal(p_low, p) &&*/ islessequal(p, p_high)) {
+        const double q = p - 0.5;
+        const double r = q * q;
+        x = (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q
+            / (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
+    }
+    // rational approximation for upper region
+    else /*if (isless(p_high, p) && isless(p, 1))*/ {
+        const double q = sqrt(-2.0 * log(1.0 - p));
+        x = -(((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+    }
+
+    assume(isless(0, p) && isless(p, 1));
+    // The relative error of the approximation has
+    // absolute value less than 1.15 × 10^−9.  One iteration of
+    // Halley's rational method (third order) gives full machine precision.
+    const double e = 0.5 * erfc(-x / sqrt(2)) - p;
+    const double u = e * sqrt(2 * M_PI) * exp((x * x) / 2.0);
+    x = x - u / (1 + x * u / 2);
+
+    return x;
 }
 
 [[gnu::const, nodiscard("pure function")]]
@@ -149,8 +172,8 @@ static double two_sided_sample_size(
 ) {
     // Bonferroni-safe significance when split over two tails (should be 3, but meh)
     const double alpha = (1 - confidence) / 2;
-    const double z1a = z(1 - alpha);
-    const double z1b = z(power);
+    const double z1a = invnorm(1 - alpha);
+    const double z1b = invnorm(power);
 
     return (2 * square(z1a + z1b) * square(sigma)) / square(delta);
 }
