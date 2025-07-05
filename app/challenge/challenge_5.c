@@ -14,54 +14,6 @@
 #include "./challenges.h"
 #include "enclave_u.h"
 
-/** Pre-defined number of rounds in each Rock, Paper, Scissors game. */
-#define ROUNDS 20
-
-/**
- * Answers for each round in Rock, Paper, Scissors game.
- *
- * These values will be returned by `ocall_pedra_papel_tesoura`.
- */
-static uint8_t answers[ROUNDS] = {0};
-
-/**
- * OCALL that will be invoked `ROUNDS` (20) times by the `ecall_pedra_papel_tesoura`. It receives the current round
- * number as its parameter (1 through `ROUNDS`). This function MUST return `0` (rock), `1` (paper), or `2` (scissors);
- * any other value makes the enclave abort immediately.
- *
- * TIP: use static variables if you need to keep state between calls.
- **/
-extern unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
-    if unlikely (round < 1 || round > ROUNDS) {
-        printf("Challenge 5: Invalid input round = %u\n", round);
-        return UINT_MAX;
-    }
-    return answers[round - 1];
-}
-
-[[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
-/**
- * Runs `ecall_pedra_papel_tesoura` and validate its return value.
- *
- * Returns the number of wins for the current `answers`, or `UINT8_MAX` if a solution was found. In the case of errors,
- * `UINT8_MAX` is also returned to stop the solution and an error code is written to `status`.
- */
-static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL status) {
-    int wins = INT_MIN;
-
-    sgx_status_t rstatus = ecall_pedra_papel_tesoura(eid, &wins);
-    if unlikely (rstatus != SGX_SUCCESS) {
-        *status = rstatus;
-        return UINT8_MAX;
-    } else if unlikely (wins < 0 || wins > ROUNDS) {
-        printf("Challenge 5: Invalid ecall_pedra_papel_tesoura wins = %d\n", wins);
-        *status = SGX_ERROR_UNEXPECTED;
-        return UINT8_MAX;
-    }
-
-    return likely(wins != ROUNDS) ? (uint8_t) wins : UINT8_MAX;
-}
-
 [[gnu::const, nodiscard("pure function")]]
 /**
  * P-Quantile function of the Standard Normal Distribution. Acklam's approximation.
@@ -139,69 +91,52 @@ static double invnorm(const double p) {
     return x;
 }
 
-[[gnu::const, nodiscard("pure function")]]
+/** Pre-defined number of rounds in each Rock, Paper, Scissors game. */
+#define ROUNDS 20
+
 /**
- * Calculate `x**2`.
+ * Answers for each round in Rock, Paper, Scissors game.
+ *
+ * These values will be returned by `ocall_pedra_papel_tesoura`.
  */
-static double square(double x) {
-    return x * x;
+static uint8_t answers[ROUNDS] = {0};
+
+/**
+ * OCALL that will be invoked `ROUNDS` (20) times by the `ecall_pedra_papel_tesoura`. It receives the current round
+ * number as its parameter (1 through `ROUNDS`). This function MUST return `0` (rock), `1` (paper), or `2` (scissors);
+ * any other value makes the enclave abort immediately.
+ *
+ * TIP: use static variables if you need to keep state between calls.
+ **/
+extern unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
+    if unlikely (round < 1 || round > ROUNDS) {
+        printf("Challenge 5: Invalid input round = %u\n", round);
+        return UINT_MAX;
+    }
+    return answers[round - 1];
 }
 
-[[gnu::const, nodiscard("pure function")]]
+[[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
 /**
- * Estimate sample size required for the given `confidence` and `power` based on classical inference using
- * two-sided tests.
+ * Runs `ecall_pedra_papel_tesoura` and validate its return value.
+ *
+ * Returns the number of wins for the current `answers`, or `UINT8_MAX` if a solution was found. In the case of errors,
+ * `UINT8_MAX` is also returned to stop the solution and an error code is written to `status`.
  */
-static double two_sided_sample_size(
-    /**
-     * 1 - α, or the likelihood that a Type-I error does not occur.
-     */
-    const double confidence,
-    /**
-     * 1 - β, or the likelihood that a Type-II error does not occur.
-     */
-    const double power,
-    /**
-     * (Assumed) Standard deviation of the sample.
-     */
-    const double sigma,
-    /**
-     * Expected gap between the correct choice and competitors.
-     */
-    const double delta
-) {
-    // Bonferroni-safe significance when split over three choices
-    const double alpha = (1 - confidence) / 3;
-    const double z1a = invnorm(1 - alpha);
-    const double z1b = invnorm(power);
+static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL status) {
+    int wins = INT_MIN;
 
-    return (2 * square(z1a + z1b) * square(sigma)) / square(delta);
-}
+    sgx_status_t rstatus = ecall_pedra_papel_tesoura(eid, &wins);
+    if unlikely (rstatus != SGX_SUCCESS) {
+        *status = rstatus;
+        return UINT8_MAX;
+    } else if unlikely (wins < 0 || wins > ROUNDS) {
+        printf("Challenge 5: Invalid ecall_pedra_papel_tesoura wins = %d\n", wins);
+        *status = SGX_ERROR_UNEXPECTED;
+        return UINT8_MAX;
+    }
 
-[[gnu::const, nodiscard("pure function")]]
-/**
- * Standard deviation for the Bernoulli distribution.
- */
-static double sigma(const double p) {
-    return sqrt(p * (1.0 - p));
-}
-
-[[gnu::const, nodiscard("pure function")]]
-/**
- * Estimate sample size required for the given `confidence` and `power` when choosing the correct value for a position.
- */
-static size_t sample_size(const double confidence, const double power, const size_t start) {
-    /** Correct choice always scores, and drawing or losing never does. So 1 score higher is expected. */
-    static const double DELTA = 1;
-    /** The probability of winning in a single round. */
-    static const double P = 1.0 / 3.0;
-
-    // sample size multiplier
-    const double sn = two_sided_sample_size(confidence, power, sigma(P), DELTA);
-    // we abuse the fact that Var[n bernoulli] = n Var[bernoulli]
-    const size_t n = (size_t) ceil((double) (ROUNDS - start - 1) * sn);
-    // sample size can't be zero
-    return likely(n <= 0) ? 1 : n;
+    return likely(wins != ROUNDS) ? (uint8_t) wins : UINT8_MAX;
 }
 
 [[gnu::const, nodiscard("pure function")]]
@@ -247,6 +182,65 @@ static void generate_random_answers_from(struct drand48_data *NONNULL random_sta
     for (size_t i = start; i < ROUNDS; i++) {
         answers[i] = random_guess(random_state);
     }
+}
+
+[[gnu::const, nodiscard("pure function")]]
+/**
+ * Calculate `x**2`.
+ */
+static double square(double x) {
+    return x * x;
+}
+
+[[gnu::const, nodiscard("pure function")]]
+/**
+ * Estimate sample size required for the given `confidence` and `power` based on classical inference using
+ * two-sided tests.
+ */
+static double two_sided_sample_size(
+    /**
+     * 1 - α, or the likelihood that a Type-I error does not occur.
+     */
+    const double confidence,
+    /**
+     * 1 - β, or the likelihood that a Type-II error does not occur.
+     */
+    const double power,
+    /**
+     * (Assumed) Standard deviation of the sample.
+     */
+    const double sigma,
+    /**
+     * Expected gap between the correct choice and competitors.
+     */
+    const double delta
+) {
+    // Bonferroni-safe significance when split over three choices
+    const double alpha = (1 - confidence) / 3;
+    const double z1a = invnorm(1 - alpha);
+    const double z1b = invnorm(power);
+
+    return (2 * square(z1a + z1b) * square(sigma)) / square(delta);
+}
+
+[[gnu::const, nodiscard("pure function")]]
+/**
+ * Estimate sample size required for the given `confidence` and `power` when choosing the correct value for a position.
+ */
+static size_t sample_size(const double confidence, const double power, const size_t start) {
+    /** Correct choice always scores, and drawing or losing never does. So 1 score higher is expected. */
+    static const double DELTA = 1;
+    /** The probability of winning in a single round. */
+    static const double P = 1.0 / 3.0;
+    /* Standard deviation for the Bernoulli distribution. */
+    const double sigma = sqrt(P * (1 - P));
+
+    // sample size multiplier
+    const double sn = two_sided_sample_size(confidence, power, sigma, DELTA);
+    // we abuse the fact that Var[n bernoulli] = n Var[bernoulli]
+    const size_t n = (size_t) ceil((double) (ROUNDS - start - 1) * sn);
+    // sample size can't be zero
+    return likely(n <= 0) ? 1 : n;
 }
 
 [[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
