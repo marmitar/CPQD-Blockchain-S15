@@ -8,7 +8,7 @@ from scipy.stats import binom, norm
 # 1 - α, or the likelihood that a Type-I error does not occur
 CONFIDENCE: Final = 0.95
 # 1 - β, or the likelihood that a Type-II error does not occur
-POWER: Final = 0.93
+POWER: Final = 0.90
 
 ## Pre-defined constants
 # Number of rounds in each Rock, Paper, Scissors game
@@ -23,7 +23,7 @@ def sample_size(start: NDArray[np.uint8]) -> NDArray[np.uint32]:
     """
     Calculate the sample size needed for a given start position.
     """
-    alpha = (1 - CONFIDENCE) / 2
+    alpha = (1 - CONFIDENCE) / 3
     z1a = norm.ppf(1 - alpha)
     z1b = norm.ppf(POWER)
     sigma2 = PROB * (1 - PROB)

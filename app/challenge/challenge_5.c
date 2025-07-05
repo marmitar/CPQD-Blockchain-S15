@@ -170,8 +170,8 @@ static double two_sided_sample_size(
      */
     const double delta
 ) {
-    // Bonferroni-safe significance when split over two tails (should be 3, but meh)
-    const double alpha = (1 - confidence) / 2;
+    // Bonferroni-safe significance when split over three choices
+    const double alpha = (1 - confidence) / 3;
     const double z1a = invnorm(1 - alpha);
     const double z1b = invnorm(power);
 
@@ -259,7 +259,7 @@ static void generate_random_answers_from(struct drand48_data *NONNULL random_sta
  * aggregate.
  *
  * The sample size `n` is estimated following a two-sided test of `ROUNDS - start` guesses with 1/3 win probability.
- * This value is at most `n = 100`, for `start = 0` and 5% significance value. In total, `3 * n` calls to
+ * This value is at most `n = 99`, for `start = 0` and 5% significance value. In total, `3 * n` calls to
  * `ecall_pedra_papel_tesoura` are made.
  *
  * Returns the total number of wins for all checked `answers`, or `UINT32_MAX` if a solution was found. In the case of
@@ -273,10 +273,11 @@ static uint32_t pick_position(
 ) {
     /** 5% chance of assuming a value is better when all are equal. */
     static const double CONFIDENCE = 0.95;
-    /** 7% chance of not picking the best value when there's one. */
-    static const double POWER = 0.93;
+    /** 10% chance of not picking the best value when there's one. */
+    static const double POWER = 0.90;
 
     const size_t n = sample_size(CONFIDENCE, POWER, start);
+    printf("start = %zu, sample size = %zu\n", start, n);
 
     uint32_t wins[3] = {0, 0, 0};
     for (uint8_t d = 0; d < 3; d++) {
@@ -317,9 +318,9 @@ static uint32_t pick_position(
  *
  *     Σ_{i=0}^19 3 sample_size(i) = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{1-α}²+z_{1-β}²) σ²/Δ²⌉
  *                                 = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{0.95}²+z_{0.9}² 2/9⌉
- *                                 = 3 × (100 + 95 + ... + 6 + 1) = 3018
+ *                                 = 3 × (99 + 94 + ... + 6 + 1) = 2982
  *
- * This solution is stochastic and has a 99.18% chance of finding the correct sequence in 20 rounds. See
+ * This solution is stochastic and has a 99.12% chance of finding the correct sequence in 20 rounds. See
  * `docs/probabilities.py` for more details on the probabilities.
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
