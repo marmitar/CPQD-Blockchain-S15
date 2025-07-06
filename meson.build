@@ -171,7 +171,7 @@ test('desafio-enclave',
     app,
     args: [signed_enclave],
     env: {
-        'LD_LIBRARY_PATH': SGX_LIBDIR,
+        'LD_LIBRARY_PATH': SGX_LDLIBRARY,
     },
     suite: ['desafio'],
 )

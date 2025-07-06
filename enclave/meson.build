@@ -11,14 +11,14 @@ SGX_LIBDIR = SGX_SDK / 'lib64'
 if get_option('sgx_mode') == 'auto' and not meson.is_cross_build()
     fs = import('fs')
     if fs.read('/proc/cpuinfo', encoding: 'utf-8').split().contains('sgx')
-        SGX_MODE = 'hw'
+        SGX_SIM = ''
     else
-        SGX_MODE = 'sim'
+        SGX_SIM = '_sim'
     endif
 elif get_option('sgx_mode') == 'hw'
-    SGX_MODE = 'hw'
+    SGX_SIM = ''
 else
-    SGX_MODE = 'sim'
+    SGX_SIM = '_sim'
 endif
 
 sgx_edger8r = find_program('sgx_edger8r', dirs: SGX_PATH)
@@ -43,12 +43,13 @@ sgx_trts = declare_dependency(
         '-nodefaultlibs',
         '-nostartfiles',
         '-Wl,--whole-archive',
-        SGX_MODE == 'hw' ? f'@SGX_LIBDIR@/libsgx_trts.a' : f'@SGX_LIBDIR@/libsgx_trts_sim.a',
+        f'@SGX_LIBDIR@/libsgx_trts@SGX_SIM@.a',
         '-Wl,--no-whole-archive',
         '-Wl,--start-group',
         f'@SGX_LIBDIR@/libsgx_tstdc.a',
         f'@SGX_LIBDIR@/libsgx_tcxx.a',
         f'@SGX_LIBDIR@/libsgx_tcrypto.a',
+        f'@SGX_LIBDIR@/libsgx_tservice@SGX_SIM@.a',
         '-Wl,--end-group',
         '-Wl,-Bstatic',
         '-Wl,-Bsymbolic',
@@ -65,8 +66,8 @@ sgx_urts = declare_dependency(
     ],
     link_args: [
         f'-L@SGX_LIBDIR@',
-        SGX_MODE == 'hw' ? '-lsgx_urts' : '-lsgx_urts_sim',
-        SGX_MODE == 'hw' ? '-lsgx_uae_service' : '-lsgx_uae_service_sim',
+        f'-lsgx_urts@SGX_SIM@',
+        f'-lsgx_uae_service@SGX_SIM@',
     ],
 ).as_system('system')
 
