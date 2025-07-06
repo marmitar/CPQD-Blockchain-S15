@@ -357,7 +357,9 @@ static sgx_status_t challenge_5_stochastic(const sgx_enclave_id_t eid) {
  * Uses dynamic programming to find the largest prefix with the correct number of wins. At each iteration, the prefix
  * length is refined to how many wins the current configuration gets, then the next configuration is tested.
  *
- * For my enclave, the solution was found after 2807 games.
+ * This implementation has an upper bound of `2**n - 2` calls to `ecall_pedra_papel_tesoura`, so 1_048_574 for
+ * `n = 20`. It should be much better on average, though, assuming a pseudo-random sequence is used. For my enclave,
+ * the solution was found after 2807 games.
  */
 static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
     memset(answers, 0, ROUNDS * sizeof(uint8_t));
