@@ -6,9 +6,9 @@ from scipy.stats import binom, norm
 
 ## Statistics parameters, can be tuned for better performance
 # 1 - α, or the likelihood that a Type-I error does not occur
-CONFIDENCE: Final = 0.95
+CONFIDENCE: Final = 0.80
 # 1 - β, or the likelihood that a Type-II error does not occur
-POWER: Final = 0.90
+POWER: Final = 0.70
 
 ## Pre-defined constants
 # Number of rounds in each Rock, Paper, Scissors game

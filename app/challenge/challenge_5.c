@@ -251,7 +251,7 @@ static size_t sample_size(const double confidence, const double power, const siz
 
 [[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
 /**
- * Estimate the correct play for position `position` with 95% confidence.
+ * Estimate the correct play for position `position` with 80% confidence.
  *
  * For each of the three possible values, `0` (rock), `1` (paper), or `2` (scissors), this function generates `n`
  * random sub-sequences after `position` and selects the value with most wins in total. The correct value is expected to
@@ -259,7 +259,7 @@ static size_t sample_size(const double confidence, const double power, const siz
  * aggregate.
  *
  * The sample size `n` is estimated following a two-sided test of `ROUNDS - position - 1` guesses with 1/3 win
- * probability. This value is at most `n = 99`, for `position = 0` and 5% significance value. In total, `3 * n`
+ * probability. This value is at most `n = 99`, for `position = 0` and 20% significance value. In total, `3 * n`
  * calls to `ecall_pedra_papel_tesoura` are made.
  *
  * Returns the total number of wins for all checked `answers`, or `UINT32_MAX` if a solution was found. In the case of
@@ -271,10 +271,10 @@ static uint32_t pick_position(
     struct drand48_data *NONNULL random_state,
     const size_t position
 ) {
-    /** 5% chance of assuming a value is better when all are equal. */
-    static const double CONFIDENCE = 0.95;
-    /** 10% chance of not picking the best value when there's one. */
-    static const double POWER = 0.90;
+    /** 20% chance of assuming a value is better when all are equal. */
+    static const double CONFIDENCE = 0.80;
+    /** 30% chance of not picking the best value when there's one. */
+    static const double POWER = 0.70;
 
     const size_t n = sample_size(CONFIDENCE, POWER, position + 1);
 
@@ -314,14 +314,15 @@ static uint32_t pick_position(
  * total wins is selected. This is likely to be the correct result, because each correct position will yield more wins
  * then the other two on average, assuming the remaining rounds are indistinguishable from random (i.e. it's a PRNG).
  *
- * In total, up to 3018 calls to `ecall_pedra_papel_tesoura` are made:
+ * In total, up to 1068 calls to `ecall_pedra_papel_tesoura` are made:
  *
  *     Σ_{i=0}^19 3 sample_size(i) = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{1-α}²+z_{1-β}²) σ²/Δ²⌉
  *                                 = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{0.95}²+z_{0.9}² 2/9⌉
- *                                 = 3 × (99 + 94 + ... + 6 + 1) = 2982
+ *                                 = 3 × (35 + 33 + ... + 2 + 1) = 1068
  *
- * This solution is stochastic and has a 98.89% chance of finding the correct sequence in 20 rounds. See
- * `docs/probabilities.py` for more details on the probabilities.
+ * This solution is stochastic and has a 45.89% chance of finding the correct sequence in 20 rounds. See
+ * `docs/probabilities.py` for more details on the probabilities. For my enclave, the solution was found after
+ * 1064 games.
  */
 static sgx_status_t challenge_5_stochastic(const sgx_enclave_id_t eid) {
     struct drand48_data random_state = seed_random_state();
@@ -355,6 +356,8 @@ static sgx_status_t challenge_5_stochastic(const sgx_enclave_id_t eid) {
  *
  * Uses dynamic programming to find the largest prefix with the correct number of wins. At each iteration, the prefix
  * length is refined to how many wins the current configuration gets, then the next configuration is tested.
+ *
+ * For my enclave, the solution was found after 2807 games.
  */
 static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
     memset(answers, 0, ROUNDS * sizeof(uint8_t));
@@ -392,7 +395,9 @@ static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
  * Challenge 5: Rock, Paper, Scissors
  * ----------------------------------
  *
- * Run an stochastic solution first, then the exact solution as fallback.
+ * Run an stochastic solution first, then the exact solution as fallback. The stochastic implementation is not
+ * guaranteed to find a solution, but it runs faster. At the same number of calls as exact implementation, the
+ * statistical one has 98% proability of finding the solution.
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
     games_played = 0;
