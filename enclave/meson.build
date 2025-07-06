@@ -88,5 +88,4 @@ untrusted_enclave = custom_target('untrusted-enclave',
 )
 
 fs = import('fs')
-
 signed_enclave = fs.copyfile(files('enclave.signed.so'))

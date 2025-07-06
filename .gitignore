@@ -13,7 +13,8 @@
 **/*.bak
 **/*.swp
 **/*.tmp
-.*_cache
+.*_cache/
+.venv/
 
 # Enclave auto generated headers
 app/enclave_u.c
