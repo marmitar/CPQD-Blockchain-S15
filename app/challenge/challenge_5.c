@@ -297,6 +297,7 @@ static uint32_t pick_position(
     return wins[0] + wins[1] + wins[2];
 }
 
+[[nodiscard("error must be checked")]]
 /**
  * Challenge 5: Rock, Paper, Scissors
  * ----------------------------------
@@ -316,7 +317,7 @@ static uint32_t pick_position(
  * This solution is stochastic and has a 98.89% chance of finding the correct sequence in 20 rounds. See
  * `docs/probabilities.py` for more details on the probabilities.
  */
-extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
+static sgx_status_t challenge_5_stochastic(const sgx_enclave_id_t eid) {
     struct drand48_data random_state = seed_random_state();
 
     for (size_t position = 0; position < ROUNDS; position++) {
@@ -337,6 +338,74 @@ extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
 #endif
     }
 
-    printf("Challenge 5: Winning sequence not found\n");
+    // solution not found
     return SGX_ERROR_UNEXPECTED;
+}
+
+[[nodiscard("error must be checked")]]
+/**
+ * Challenge 5: Rock, Paper, Scissors
+ * ----------------------------------
+ *
+ * Uses dynamic programming to find the largest prefix with the correct number of wins. At each iteration, the prefix
+ * length is refined to how many wins the current configuration gets, then the next configuration is tested.
+ */
+static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
+    memset(answers, 0, ROUNDS * sizeof(uint8_t));
+
+    while (true) {
+        sgx_status_t status = SGX_SUCCESS;
+        const uint8_t wins = check_answers(eid, &status);
+        if unlikely (wins == UINT8_MAX) {
+            return status;
+        }
+        assume(wins < ROUNDS);
+
+        // we need all positions to be correct, but since we got `wins < ROUNDS`,
+        // we assume the first `wins` positions are correct, so we update the next position
+        uint8_t i = wins + 1;
+        // if the next position is at maximum (i.e. we tried all values), we reduce the prefix length
+        while (unlikely(answers[i - 1] >= 2)) {
+            i--;
+        }
+
+        // no prefix length matched
+        if unlikely (i == 0) {
+            // solution not found
+            return SGX_ERROR_UNEXPECTED;
+        }
+
+        // when we finally find a prefix with next position open for increment,
+        // we update that and reset all other positions to zero
+        answers[i - 1] = (answers[i - 1] + 1) % 3;
+        memset(&answers[i], 0, (ROUNDS - i) * sizeof(uint8_t));
+    }
+}
+
+/**
+ * Challenge 5: Rock, Paper, Scissors
+ * ----------------------------------
+ *
+ * Run an stochastic solution first, then the exact solution as fallback.
+ */
+extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
+    sgx_status_t status = challenge_5_stochastic(eid);
+    if likely (status == SGX_SUCCESS) {
+#ifdef DEBUG
+        printf("Challenge 5: Statochastic solution successful.\n");
+#else
+        return SGX_SUCCESS;
+#endif
+    }
+
+    status = challenge_5_exact(eid);
+    if likely (status == SGX_SUCCESS) {
+#ifdef DEBUG
+        printf("Challenge 5: Exact solution successful.\n");
+#endif
+        return SGX_SUCCESS;
+    }
+
+    printf("Challenge 5: Winning sequence not found\n");
+    return status;
 }
