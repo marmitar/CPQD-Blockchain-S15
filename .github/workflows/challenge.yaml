@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '>= 3.13'
 
-      - name: Install Intel SGX SDK (simulation only)
+      - name: Install Intel SGX SDK
         run: |
           wget https://download.01.org/intel-sgx/sgx-linux/2.26/distro/ubuntu24.04-server/sgx_linux_x64_sdk_2.26.100.0.bin
           chmod +x sgx_linux_x64_sdk_2.26.100.0.bin
@@ -30,7 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install 'meson >= 1.4.0' 'ninja >= 1'
 
-      - name: Use GCC-14
+      - name: Use GCC 14
         run: |
           sudo update-alternatives \
               --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 \
