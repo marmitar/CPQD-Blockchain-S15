@@ -33,17 +33,26 @@ def sample_size(start: NDArray[np.uint8]) -> NDArray[np.uint32]:
     return np.maximum(n, 1)
 
 
-@np.vectorize
 def p_correct_pick(s: np.uint8, n: np.uint32) -> np.float64:
     """
     Calculate the probability of making a correct pick given the sample sizes.
     """
     t = (ROUNDS - s - 1) * n
 
-    def pk(k: int) -> float:
-        return binom.pmf(k, t, PROB) * binom.cdf(k + n, t, PROB) ** 2
+    def p_k(k: int) -> float:
+        """Probability that it picks the correct value, given that it wins `k` times."""
 
-    p = sum(pk(k) for k in range(t + 1))
+        # probability that the correct value wins `k` random rounds in total
+        p_correct = binom.pmf(k, t, PROB)
+        # probability that a wrong value wins less than `k + n` random rounds in total
+        # if the correct value is 0, the wrong value can win up to `k + n` rounds inclusive,
+        # because we favor 0 on draws
+        p_wrong = binom.cdf(k + n - 1, t, PROB) + binom.pmf(k + n, t, PROB) / 3
+        # since the correct value won `k` random and `n` fixed (by virtue of being correct),
+        # and the wrong ones won less then `k + n` (random only), then we choose the correct value
+        return p_correct * p_wrong**2
+
+    p = sum(p_k(k) for k in range(t + 1))
     return max(0, min(p, 1))
 
 
@@ -61,8 +70,11 @@ if __name__ == '__main__':
 
     s = np.arange(ROUNDS, dtype=np.uint8)
     n = sample_size(s)
-    p = p_correct_pick(s, n)
+    p = []
 
     for i in s:
-        show(f's = {i:2d}', n[i], p[i])
+        pi = p_correct_pick(s[i], n[i])
+        show(f's = {i:2d}', n[i], pi)
+        p.append(pi)
+
     show('total', np.sum(n), np.prod(p))

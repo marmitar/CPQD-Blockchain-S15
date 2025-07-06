@@ -313,7 +313,7 @@ static uint32_t pick_position(
  *                                 = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{0.95}²+z_{0.9}² 2/9⌉
  *                                 = 3 × (99 + 94 + ... + 6 + 1) = 2982
  *
- * This solution is stochastic and has a 99.12% chance of finding the correct sequence in 20 rounds. See
+ * This solution is stochastic and has a 98.89% chance of finding the correct sequence in 20 rounds. See
  * `docs/probabilities.py` for more details on the probabilities.
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
