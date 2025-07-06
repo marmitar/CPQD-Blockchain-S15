@@ -38,7 +38,7 @@ jobs:
 
       - name: Meson setup
         id: setup
-        run: meson setup build
+        run: meson setup build --debug
 
       - name: Build
         id: build
