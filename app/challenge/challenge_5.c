@@ -1,4 +1,4 @@
-#define _GNU_SOURCE 1  // required for M_PI
+#define _GNU_SOURCE 1  // required for M_PI and lrand48_r
 
 #include <inttypes.h>
 #include <limits.h>
@@ -259,7 +259,7 @@ static size_t sample_size(const double confidence, const double power, const siz
  * aggregate.
  *
  * The sample size `n` is estimated following a two-sided test of `ROUNDS - position - 1` guesses with 1/3 win
- * probability. This value is at most `n = 99`, for `position = 0` and 20% significance value. In total, `3 * n`
+ * probability. This value is at most `n = 35`, for `position = 0` and 20% significance value. In total, `3 * n`
  * calls to `ecall_pedra_papel_tesoura` are made.
  *
  * Returns the total number of wins for all checked `answers`, or `UINT32_MAX` if a solution was found. In the case of
@@ -317,7 +317,7 @@ static uint32_t pick_position(
  * In total, up to 1068 calls to `ecall_pedra_papel_tesoura` are made:
  *
  *     Σ_{i=0}^19 3 sample_size(i) = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{1-α}²+z_{1-β}²) σ²/Δ²⌉
- *                                 = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{0.95}²+z_{0.9}² 2/9⌉
+ *                                 = 3 Σ_{i=0}^19 ⌈(20-i) × 2(z_{0.8}²+z_{0.7}² 2/9⌉
  *                                 = 3 × (35 + 33 + ... + 2 + 1) = 1068
  *
  * This solution is stochastic and has a 45.89% chance of finding the correct sequence in 20 rounds. See
@@ -376,7 +376,7 @@ static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
         // we assume the first `wins` positions are correct, so we update the next position
         uint8_t i = wins + 1;
         // if the next position is at maximum (i.e. we tried all values), we reduce the prefix length
-        while (unlikely(answers[i - 1] >= 2)) {
+        while (likely(i > 0) && unlikely(answers[i - 1] >= 2)) {
             i--;
         }
 
@@ -389,7 +389,7 @@ static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
         // when we finally find a prefix with next position open for increment,
         // we update that and reset all other positions to zero
         answers[i - 1] = (uint8_t) (answers[i - 1] + 1) % 3;
-        memset(&answers[i], 0, (ROUNDS - i) * sizeof(uint8_t));
+        memset(answers + i, 0, (ROUNDS - i) * sizeof(uint8_t));
     }
 }
 
@@ -398,8 +398,9 @@ static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
  * ----------------------------------
  *
  * Run an stochastic solution first, then the exact solution as fallback. The stochastic implementation is not
- * guaranteed to find a solution, but it runs faster. At the same number of calls as exact implementation, the
- * statistical one has 98% proability of finding the solution.
+ * guaranteed to find a solution, but it runs faster. At 2800 calls (the same number as exact implementation), the
+ * statistical one has 98% probability of finding the solution. Additionally, the stochastic solution allows
+ * for extreme parallelization.
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
     games_played = 0;
