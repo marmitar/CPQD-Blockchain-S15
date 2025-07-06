@@ -102,6 +102,11 @@ static double invnorm(const double p) {
 static uint8_t answers[ROUNDS] = {0};
 
 /**
+ * Number of successful calls to `ecall_pedra_papel_tesoura`.
+ */
+static size_t games_played = 0;
+
+/**
  * OCALL that will be invoked `ROUNDS` (20) times by the `ecall_pedra_papel_tesoura`. It receives the current round
  * number as its parameter (1 through `ROUNDS`). This function MUST return `0` (rock), `1` (paper), or `2` (scissors);
  * any other value makes the enclave abort immediately.
@@ -136,6 +141,7 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
         return UINT8_MAX;
     }
 
+    games_played++;
     return likely(wins != ROUNDS) ? (uint8_t) wins : UINT8_MAX;
 }
 
@@ -389,23 +395,29 @@ static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
  * Run an stochastic solution first, then the exact solution as fallback.
  */
 extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
+    games_played = 0;
     sgx_status_t status = challenge_5_stochastic(eid);
+    const size_t stochastic_games = games_played;
+
     if likely (status == SGX_SUCCESS) {
 #ifdef DEBUG
-        printf("Challenge 5: Statochastic solution successful.\n");
+        printf("Challenge 5: Stochastic solution successful after %zu games.\n", stochastic_games);
 #else
         return SGX_SUCCESS;
 #endif
     }
 
+    games_played = 0;
     status = challenge_5_exact(eid);
+    const size_t exact_games = games_played;
+
     if likely (status == SGX_SUCCESS) {
 #ifdef DEBUG
-        printf("Challenge 5: Exact solution successful.\n");
+        printf("Challenge 5: Exact solution successful after %zu games.\n", exact_games);
 #endif
         return SGX_SUCCESS;
     }
 
-    printf("Challenge 5: Winning sequence not found\n");
+    printf("Challenge 5: Winning sequence not found after %zu games.\n", stochastic_games + exact_games);
     return status;
 }
