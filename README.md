@@ -161,9 +161,8 @@ sudo cpuid | grep -i sgx
   - `enclave.config.xml`: XML file containing the user defined parameters of an enclave, for more detals read the
     section [Enclave XML Configuration File](#enclave-xml-configuration-file).
   - `enclave.signed.so`: Pre-compiled enclave file with challenges implemented.
-
-<!-- - `build.sh`: Build script, do the same as `make SGX_MODE=SIM`, but is easier to read and learn the compilation process
-  step-by-step. -->
+- `build.sh`: Build script, do the same as `meson setup build -Dsgx_mode=sim`, but is easier to read and learn the
+  compilation process step-by-step.
 
 ## Enclave XML Configuration File
 
