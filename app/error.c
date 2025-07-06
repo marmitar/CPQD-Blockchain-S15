@@ -112,7 +112,7 @@ static sgx_errlist_t error_message(sgx_status_t ret) {
 
     return (sgx_errlist_t) {
         .err = ret,
-        .msg = "Unexpected error occurred.",
+        .msg = "Unknown error occurred.",
         .sug = NULL,
     };
 }
@@ -124,5 +124,5 @@ extern void print_error_message(sgx_status_t ret) {
     if unlikely (err.sug != NULL) {
         printf("Info: %s\n", err.sug);
     }
-    printf("Error: %s\n", err.msg);
+    printf("Error: %s (0x%04x)\n", err.msg, err.err);
 }

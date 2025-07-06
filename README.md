@@ -49,9 +49,8 @@ meson test -C build
 Or manually
 
 ```sh
-ln -sf build/enclave/enclave.signed.so .
 source /opt/intel/sgxsdk/environment
-build/app/app
+build/app/app docs/enclave-desafio-5.signed.so
 ```
 
 ## Check SGX Hardware Support
