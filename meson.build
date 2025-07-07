@@ -161,6 +161,7 @@ add_global_link_arguments(
 # # # # # #
 # TARGETS #
 
+include = include_directories('include')
 subdir('enclave')
 subdir('app')
 

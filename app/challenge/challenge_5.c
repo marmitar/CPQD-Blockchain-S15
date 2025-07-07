@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../defines.h"
 #include "./challenges.h"
+#include "defines.h"
 #include "enclave_u.h"
 
 [[gnu::const, nodiscard("pure function")]]

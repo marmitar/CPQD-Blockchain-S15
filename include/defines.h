@@ -1,8 +1,14 @@
-#ifndef APP_DEFINES_H
+#ifndef DEFINES_H
 /** Utility macros. */
-#define APP_DEFINES_H
+#define DEFINES_H
 
 #include <assert.h>
+
+// clang-format off
+#if __STDC_VERSION__ < 202000L
+#   error "This code is compliant with C2x/C23 or later only."
+#endif
+// clang-format on
 
 #if defined(__clang__)
 /**
@@ -50,4 +56,4 @@
         [[gnu::assume(condition)]]
 #endif
 
-#endif  // APP_DEFINES_H
+#endif  // DEFINES_H

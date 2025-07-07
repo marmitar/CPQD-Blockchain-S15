@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "../defines.h"
 #include "./challenges.h"
+#include "defines.h"
 #include "enclave_u.h"
 
 /**

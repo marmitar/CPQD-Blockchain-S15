@@ -15,6 +15,7 @@ app = executable('app',
     files('app.c', 'error.c'),
     challenges,
     untrusted_enclave,
+    include_directories: include,
     dependencies: [sgx_urts, math],
     link_args: ['-Wl,-z,pack-relative-relocs'],
 )

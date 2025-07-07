@@ -1,13 +1,9 @@
-// clang-format off
-#if __STDC_VERSION__ < 202000L
-#error "This code is compliant with C2x/C23 or later only."
-#endif
-// clang-format on
+#include "defines.h"
 
 /**
  * Example code.
  */
-extern int ecall_name_check(const char *name) {
+extern int ecall_name_check(const char *NULLABLE name) {
     (void) name;
     return -1;
 }
@@ -18,7 +14,7 @@ extern int ecall_name_check(const char *name) {
  *
  * Just call this function passing your full name.
  */
-extern int ecall_verificar_aluno(const char *nome) {
+extern int ecall_verificar_aluno(const char *NULLABLE nome) {
     (void) nome;
     return -1;
 }
@@ -48,7 +44,7 @@ extern int ecall_verificar_senha(unsigned int password) {
  *
  * HINT: the secret word contains only uppercase letters, no spaces, diacritics or digits.
  */
-extern int ecall_palavra_secreta(char word[WORD_LEN]) {
+extern int ecall_palavra_secreta(char word[NULLABLE WORD_LEN]) {
     for (unsigned i = 0; i < WORD_LEN; i++) {
         word[i] = '-';
     }

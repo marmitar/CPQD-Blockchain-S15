@@ -1,9 +1,3 @@
-// clang-format off
-#if __STDC_VERSION__ < 202000L
-#error "This code is compliant with C2x/C23 or later only."
-#endif
-// clang-format on
-
 #include <sgx_defs.h>
 #include <sgx_eid.h>
 #include <sgx_error.h>
@@ -13,8 +7,8 @@
 #include <stdlib.h>
 
 #include "./challenge/challenges.h"
-#include "./defines.h"
 #include "./error.h"
+#include "defines.h"
 #include "enclave_u.h"
 
 /**

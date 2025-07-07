@@ -106,11 +106,12 @@ enclave_lds = files(debugging_enabled ? 'enclave_debug.lds' : 'enclave.lds')
 enclave = shared_library('enclave.so',
     files('enclave.c'),
     trusted_enclave,
+    include_directories: include,
+    dependencies: [sgx_trts],
     link_depends: [enclave_lds],
     link_args: [
         '-Wl,--version-script=@0@'.format(enclave_lds[0].full_path()),
     ],
-    dependencies: [sgx_trts],
     name_prefix: '',
     name_suffix: 'so',
 )

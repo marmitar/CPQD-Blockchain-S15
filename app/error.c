@@ -1,8 +1,8 @@
 #include <sgx_error.h>
 #include <stdio.h>
 
-#include "./defines.h"
 #include "./error.h"
+#include "defines.h"
 
 typedef struct sgx_errlist_t {
     sgx_status_t err;
