@@ -1,21 +1,38 @@
-# Intel SGX Template Project
+# Intel SGX Challenges
 
-Minimal `C` project intended to be used as template project to get started with Intel SGX.
+Solution to selected challenges implemented in a secure SGX enclave.
 
-## Development
+## Challenges
 
-Enable [pre-commit](https://pre-commit.com/):
+### Challenge 1: Call the enclave
 
-```sh
-pre-commit install
-```
+Use `ecall_verificar_aluno` to call the enclave with your name.
+
+### Challenge 2: Crack the password
+
+Find the password (between 0 and 99999 inclusive) for which `ecall_verificar_senha` returns 0.
+
+### Challenge 3: Secret Sequence
+
+Find the correct 20 letter string (with A-Z) for `ecall_palavra_secreta`.
+
+### Challenge 4: Secret Polynomial
+
+Use `ecall_polinomio_secreto` to find the coefficients for a polynomial $(a x^2 + b x + c) \text{ mod } p$, where $p$ is
+[2147483647](https://en.wikipedia.org/wiki/2,147,483,647) and $-10^8 < a + b + c < 10^8$. Verify with
+`ecall_verificar_polinomio`.
+
+### Challenge 5: Rock, Paper, Scissors
+
+Implement a `unsigned int ocall_pedra_papel_tesoura(unsigned int round)` that returns `0` (rock), `1` (paper) or `2`
+(scissors) for each round, and beat `ecall_pedra_papel_tesoura` for all 20 rounds.
 
 ## Building
 
 First make sure you have the latest [linux-sgx-sdk](https://github.com/intel/linux-sgx) installed, you can follow the
 instructions on their github page.
 
-To compile APP and/or ENCLAVE, use one of the following options:
+To compile APP and/or setup the ENCLAVE, use one of the following options:
 
 ```sh
 # Prepare meson
@@ -28,29 +45,83 @@ meson compile -C build
 meson compile -C build app
 
 # Switch to Hardware+Debug mode
-meson configure --buildtype debugoptimized --debug -D sgx_mode=hw build
+meson configure build --buildtype debugoptimized -D debug=true -D sgx_mode=hw
 
-# Compile ENCLAVE in Hardware+Debug Mode
-make compile -C build signed-enclave
+# Copy ENCLAVE
+make compile -C build enclave.signed.so
 ```
 
 Format the code using [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
 
 ```sh
+# CC=clang only
 ninja -C build clang-format
 ```
 
 Run the App
 
 ```sh
-meson test -C build
+meson test -C build --verbose
 ```
 
 Or manually
 
+```console
+> source /opt/intel/sgxsdk/environment
+> build/app/app enclave/enclave.signed.so
+
+------------------------------------------------
+
+[ENCLAVE] DESAFIO 1 CONCLUIDO!! parabéns Tiago De Paula Alves!!
+
+------------------------------------------------
+
+
+------------------------------------------------
+
+[ENCLAVE] DESAFIO 2 CONCLUIDO!! a senha é 47481
+
+------------------------------------------------
+
+
+------------------------------------------------
+
+[ENCLAVE] DESAFIO 3 CONCLUIDO!! a palavra secreta é VASNVLIESBWTCTIHNYCO
+
+------------------------------------------------
+
+[ENCLAVE] a=368, b=2401, c=-3461 = 316784540
+
+[ENCLAVE] a=368, b=2401, c=-3461 = 1389485725
+
+[ENCLAVE] a=368, b=2401, c=-3461 = 327473577
+
+
+------------------------------------------------
+
+[ENCLAVE] DESAFIO 4 CONCLUIDO!! os polinomios são: A=368, B=2401, C=-3461
+
+------------------------------------------------
+
+
+------------------------------------------------
+
+[ENCLAVE] DESAFIO 5 CONCLUIDO!! V (vitória), D (derrota) E (empate)
+          ENCLAVE JOGADAS: 00010021202221110011
+             SUAS JOGADAS: 11121102010002221122
+                RESULTADO: VVVVVVVVVVVVVVVVVVVV
+
+------------------------------------------------
+
+Info: Enclave successfully returned.
+```
+
+### Development
+
+Enable [pre-commit](https://pre-commit.com/):
+
 ```sh
-source /opt/intel/sgxsdk/environment
-build/app/app docs/enclave-desafio-5.signed.so
+pre-commit install
 ```
 
 ## Check SGX Hardware Support
@@ -77,24 +148,22 @@ sudo cpuid | grep -i sgx
 
 ## Project Structure
 
-- **app/\*:** Untrusted Component Code
-  - **app.c:** Application entry point, register and calls the enclave.
-  - **error.c:** Prints the
+- `app/*`: Untrusted Component Code
+  - `app.c`: Application entry point, register and calls the enclave.
+  - `error.c`: Prints the
     [sgx_status_t](https://github.com/intel/linux-sgx/blob/sgx_2.26/common/inc/sgx_error.h#L37-L127) error message.
-- **enclave/\*:** Trusted Component Code
-  - **enclave.c:** Enclave ECALLS implementation.
-  - **enclave.edl:** Enclave Trusted and Untrusted input types boundaries, OCALLS and ECALLS definitions. (see
+- `enclave/*`: Trusted Component Code
+  <!-- - `enclave.c`: Enclave ECALLS implementation. -->
+  - `enclave.edl`: Enclave Trusted and Untrusted input types boundaries, OCALLS and ECALLS definitions. (see
     [Enclave Definition Language - EDL](https://cdrdv2-public.intel.com/671446/input-types-and-boundary-checking-edl.pdf))
-  - **enclave.lds** and **enclave_debug.lds**: Linkers for hardware and simulation mode, for more detals read the
-    section [about enclave/\*.lds files](#about-enclavelds-files).
-  - **enclave.config.xml:** XML file containing the user defined parameters of an enclave, for more detals read the
+  <!-- - `enclave.lds` and `enclave_debug.lds`: Linkers for hardware and simulation mode, for more detals read the section
+    [about enclave/\*.lds files](#about-enclavelds-files). -->
+  - `enclave.config.xml`: XML file containing the user defined parameters of an enclave, for more detals read the
     section [Enclave XML Configuration File](#enclave-xml-configuration-file).
-- **build.sh:** Build script, do the same as `make SGX_MODE=SIM`, but is easier to read and learn the compilation
-  process step-by-step.
-- **setup-sgx.sh:** Install SGX-SDK in a linux machine, obs: only tested on Ubuntu 24.04.
-- **.vscode/c_cpp_properties.json:** intellisense
-  [c_cpp_properties.json](https://code.visualstudio.com/docs/cpp/customize-cpp-settings) for vscode c/c++
-  auto-completion.
+  - `enclave.signed.so`: Pre-compiled enclave file with challenges implemented.
+
+<!-- - `build.sh`: Build script, do the same as `make SGX_MODE=SIM`, but is easier to read and learn the compilation process
+  step-by-step. -->
 
 ## Enclave XML Configuration File
 
@@ -126,7 +195,7 @@ the enclave. Here is an example of the configuration file.
 </EnclaveConfiguration>
 ```
 
-## About enclave\*.lds files
+## About `enclave*.lds` files
 
 The symbol `enclave_entry` is the entry point to the enclave. The symbol `g_global_data_sim` comes from the **tRTS
 simulation library** and is required to be exposed for running an enclave in the simulation mode since it distinguishes
