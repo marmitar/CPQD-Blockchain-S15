@@ -1,12 +1,9 @@
 #include <inttypes.h>
-#include <limits.h>
 #include <pcg_basic.h>
 #include <sgx_error.h>
-#include <sgx_tcrypto.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "./enclave.h"
 #include "defines.h"
@@ -112,29 +109,11 @@ int printf(const char *NONNULL fmt, ...) {
     return likely(written < MAX_BYTES) ? written : MAX_BYTES;
 }
 
-/** Randomly generated seed. */
-static uint8_t ENCLAVE_SEED[sizeof(uint64_t)] = {
-#embed SEED_FILE
-};
-
-[[nodiscard("pure function"), gnu::pure]]
-/**
- * Generate integer from bytes in little-endian order.
- */
-static uint64_t from_bytes(const uint8_t bytes[sizeof(uint64_t)]) {
-    uint64_t result = 0;
-    for (size_t i = 0; i < sizeof(uint64_t); i++) {
-        const uint64_t byte = (uint64_t) bytes[i];
-        result |= byte << i * CHAR_BIT;
-    }
-    return result;
-}
-
 /** Initialize PRNG with given seed. */
 pcg32_random_t seeded_pcg_rng(const uint64_t stream_selector) {
-    const uint64_t seed = from_bytes(ENCLAVE_SEED);
+    const uint64_t seed = ENCLAVE_SEED;
 #ifdef DEBUG
-    printf("[DEBUG] seeded_pcg_rng: seed=0x%016" PRIx64 ", stream=0x%016" PRIx64 "\n", seed, stream_selector);
+    printf("[DEBUG] seeded_pcg_rng: seed=0x%016" PRIx64 ", stream=%" PRIu64 "\n", seed, stream_selector);
 #endif
 
     pcg32_random_t rng = {0};

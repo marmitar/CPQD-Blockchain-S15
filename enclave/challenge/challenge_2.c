@@ -15,8 +15,7 @@ static constexpr unsigned MAX_PASSWORD = 99'999;
  * Generate password from fixed seed.
  */
 static unsigned password(void) {
-    static constexpr const uint64_t STREAM = 0x2222;
-    pcg32_random_t rng = seeded_pcg_rng(STREAM);
+    pcg32_random_t rng = seeded_pcg_rng(2);
 
     const unsigned result = pcg32_boundedrand_r(&rng, MAX_PASSWORD - MIN_PASSWORD) + MIN_PASSWORD;
     assume(MIN_PASSWORD <= result && result <= MAX_PASSWORD);

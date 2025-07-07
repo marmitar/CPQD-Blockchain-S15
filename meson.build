@@ -166,6 +166,14 @@ pcg = subproject('pcg') \
     .get_variable('pcg_c_dep') \
     .as_system('system')
 
+seed = run_command(
+    files('scripts/seed.py'),
+    get_option('enclave_seed').to_string(),
+    meson.project_source_root() / '.seed',
+    capture: true,
+    check: true,
+).stdout().strip()
+
 # # # # # #
 # TARGETS #
 
