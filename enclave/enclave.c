@@ -6,19 +6,6 @@
 #include "defines.h"
 #include "enclave_t.h"
 
-/**
- * Challenge 2: Crack the Password
- * -------------------------------
- *
- * Returns 0 if the password is right, negative otherwise.
- *
- * HINT: the password is an integer between 0 and 99999.
- */
-extern int ecall_verificar_senha(unsigned int senha) {
-    (void) senha;
-    return -1;
-}
-
 /** Number of characters for the secret word. */
 #define WORD_LEN 20
 

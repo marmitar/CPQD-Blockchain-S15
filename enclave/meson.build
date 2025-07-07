@@ -114,11 +114,13 @@ configure_file(output: 'enclave_config.h',
   configuration: {
     'CHALLENGE_1_MAX_LENGTH': 4096,
     'CHALLENGE_1_EXPECTED_NAME': student_name,
+    'CHALLENGE_2_PASSWORD': 0x037c21a547ab1930,
   }
 )
 
 challenges = files(
     'challenge/challenge_1.c',
+    'challenge/challenge_2.c',
 )
 
 enclave_lds = files(debugging_enabled ? 'enclave_debug.lds' : 'enclave.lds')
