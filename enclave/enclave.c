@@ -1,4 +1,10 @@
+#include <sgx_error.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "./enclave.h"
 #include "defines.h"
+#include "enclave_t.h"
 
 /**
  * Example code.
@@ -27,8 +33,8 @@ extern int ecall_verificar_aluno(const char *NULLABLE nome) {
  *
  * HINT: the password is an integer between 0 and 99999.
  */
-extern int ecall_verificar_senha(unsigned int password) {
-    (void) password;
+extern int ecall_verificar_senha(unsigned int senha) {
+    (void) senha;
     return -1;
 }
 
@@ -44,9 +50,9 @@ extern int ecall_verificar_senha(unsigned int password) {
  *
  * HINT: the secret word contains only uppercase letters, no spaces, diacritics or digits.
  */
-extern int ecall_palavra_secreta(char word[NULLABLE WORD_LEN]) {
+extern int ecall_palavra_secreta(char palavra[NULLABLE WORD_LEN]) {
     for (unsigned i = 0; i < WORD_LEN; i++) {
-        word[i] = '-';
+        palavra[i] = '-';
     }
     return -1;
 }
@@ -105,4 +111,28 @@ extern int ecall_verificar_polinomio(int a, int b, int c) {
  **/
 extern int ecall_pedra_papel_tesoura(void) {
     return -1;
+}
+
+/**
+ * `printf`-like function for the enclave. Buffer limited to `BUFSIZ` (8192) bytes.
+ */
+int printf(const char *NONNULL fmt, ...) {
+    char buf[BUFSIZ] = "";
+
+    va_list ap;
+    va_start(ap, fmt);
+    const int written = vsnprintf(buf, BUFSIZ, fmt, ap);
+    va_end(ap);
+
+    if unlikely (written <= 0) {
+        return written;
+    }
+
+    const sgx_status_t status = ocall_print_string(buf);
+    if unlikely (status != SGX_SUCCESS) {
+        return -1;
+    }
+
+    constexpr int MAX_BYTES = likely(BUFSIZ > 0) ? BUFSIZ - 1 : 0;
+    return likely(written < MAX_BYTES) ? written : MAX_BYTES;
 }
