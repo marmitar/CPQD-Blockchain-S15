@@ -2,6 +2,7 @@ project('trabalho-pratico-intel-sgx', 'c',
     version: '1.0.0',
     license: 'AGPL-3.0-or-later',
     meson_version: '>= 1.4',
+    subproject_dir: 'external',
     default_options: {
         'c_std': 'c23',
         'buildtype': 'release',
@@ -157,6 +158,13 @@ add_global_link_arguments(
     linker_options,
     language: ['c', 'cpp'],
 )
+
+# # # # # # # # #
+# DEPENDENCIES  #
+
+pcg = subproject('pcg') \
+    .get_variable('pcg_c_dep') \
+    .as_system('system')
 
 # # # # # #
 # TARGETS #

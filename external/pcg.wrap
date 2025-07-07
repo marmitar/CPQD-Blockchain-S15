@@ -1,0 +1,6 @@
+[wrap-file]
+directory = pcg-c-basic-bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3
+source_url = https://github.com/imneme/pcg-c-basic/archive/bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3.tar.gz
+source_filename = pcg-c-basic-bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3.tar.gz
+source_hash = 7b601dd023c9dd56d5ae07f3151dbe72c992f17636a6d2d0b0ee949aa28c52f9
+patch_directory = pcg-c-basic
