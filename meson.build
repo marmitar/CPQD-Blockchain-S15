@@ -1,7 +1,7 @@
 project('trabalho-pratico-intel-sgx', 'c',
     version: '1.0.0',
     license: 'AGPL-3.0-or-later',
-    meson_version: '>= 1.3',
+    meson_version: '>= 1.4',
     default_options: {
         'c_std': 'c23',
         'buildtype': 'release',
@@ -167,11 +167,22 @@ subdir('app')
 # # # # #
 # TESTS #
 
-test('desafio-enclave',
+challenge_enclave = files('docs/enclave-desafio-5.signed.so')
+
+test('challenge-enclave',
     app,
-    args: [signed_enclave],
+    args: [challenge_enclave],
     env: {
         'LD_LIBRARY_PATH': SGX_LDLIBRARY,
     },
-    suite: ['desafio'],
+    suite: ['challenge'],
+)
+
+test('generated-enclave',
+    app,
+    args: [generated_enclave],
+    env: {
+        'LD_LIBRARY_PATH': SGX_LDLIBRARY,
+    },
+    suite: ['generated'],
 )
