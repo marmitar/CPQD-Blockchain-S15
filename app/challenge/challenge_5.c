@@ -1,8 +1,7 @@
-#define _GNU_SOURCE 1  // required for M_PI and lrand48_r
-
 #include <inttypes.h>
 #include <limits.h>
 #include <math.h>
+#include <pcg_basic.h>
 #include <sgx_eid.h>
 #include <sgx_error.h>
 #include <stddef.h>
@@ -82,11 +81,12 @@ static double invnorm(const double p) {
     }
 
     assume(isless(0, p) && isless(p, 1));
+    static constexpr double PI = 3.14159265358979323846;
     // The relative error of the approximation has
     // absolute value less than 1.15 × 10^−9.  One iteration of
     // Halley's rational method (third order) gives full machine precision.
     const double e = 0.5 * erfc(-x / sqrt(2)) - p;
-    const double u = e * sqrt(2 * M_PI) * exp((x * x) / 2.0);
+    const double u = e * sqrt(2 * PI) * exp((x * x) / 2.0);
     x = x - u / (1 + x * u / 2);
 
     return x;
@@ -150,14 +150,12 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
 /**
  * Initialize a PRNG state with pre-defined seeds.
  */
-static struct drand48_data seed_random_state(void) {
-    /** Randomly generated fixed seed (`openssl rand -hex 6`). */
-    static const uint16_t SEED[3] = {0xdf4b, 0x9253, 0x1eec};
+static pcg32_random_t seed_random_state(void) {
+    /** Randomly generated fixed seed (`openssl rand -hex 16`). */
+    static const uint64_t SEED[2] = {0x4b'3b'71'75'60'aa'68'8b, 0x9b'13'2b'73'f3'91'a8'a0};
 
-    struct drand48_data state = {0};
-    const int rv = seed48_r((uint16_t[3]) {SEED[0], SEED[1], SEED[2]}, &state);
-    assume(rv == 0);
-
+    pcg32_random_t state = {0};
+    pcg32_srandom_r(&state, SEED[0], SEED[1]);
     return state;
 }
 
@@ -165,27 +163,15 @@ static struct drand48_data seed_random_state(void) {
 /**
  * Generate an evenly distributed guess between `0` (rock), `1` (paper), or `2` (scissors) via rejection sampling.
  */
-static uint8_t random_guess(struct drand48_data *NONNULL random_state) {
-    static const long LRAND48_MAX = (1L << 31) - 1;
-    static const long THRESHOLD = LRAND48_MAX - LRAND48_MAX % 3;
-
-    while (true) {
-        long value = -1;
-        const int rv = lrand48_r(random_state, &value);
-        assume(rv == 0);
-        assume(value >= 0);
-
-        if likely (value < THRESHOLD) {
-            return (uint8_t) (value % 3);
-        }
-    }
+static uint8_t random_guess(pcg32_random_t *NONNULL random_state) {
+    return (uint8_t) pcg32_boundedrand_r(random_state, 3) % 3;
 }
 
 [[gnu::hot]]
 /**
  * Populate the last `ROUNDS - start` positions in `answers` with random guesses.
  */
-static void generate_random_answers_from(struct drand48_data *NONNULL random_state, const size_t start) {
+static void generate_random_answers_from(pcg32_random_t *NONNULL random_state, const size_t start) {
     for (size_t i = start; i < ROUNDS; i++) {
         answers[i] = random_guess(random_state);
     }
@@ -269,7 +255,7 @@ static size_t sample_size(const double confidence, const double power, const siz
 static uint32_t pick_position(
     const sgx_enclave_id_t eid,
     sgx_status_t *NONNULL status,
-    struct drand48_data *NONNULL random_state,
+    pcg32_random_t *NONNULL random_state,
     const size_t position
 ) {
     /** 20% chance of assuming a value is better when all are equal. */
@@ -326,7 +312,7 @@ static uint32_t pick_position(
  * 1064 games.
  */
 static sgx_status_t challenge_5_stochastic(const sgx_enclave_id_t eid) {
-    struct drand48_data random_state = seed_random_state();
+    pcg32_random_t random_state = seed_random_state();
 
     for (size_t position = 0; position < ROUNDS; position++) {
         sgx_status_t status = SGX_SUCCESS;

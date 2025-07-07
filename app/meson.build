@@ -16,7 +16,7 @@ app = executable('app',
     challenges,
     untrusted_enclave,
     include_directories: include,
-    dependencies: [sgx_urts, math],
+    dependencies: [sgx_urts, math, pcg],
     link_args: ['-Wl,-z,pack-relative-relocs'],
 )
 
