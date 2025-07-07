@@ -23,7 +23,7 @@ static_assert(P <= INT32_MAX);
  * Convert integer to range [0, P).
  */
 static uint32_t toP(const int n) {
-    static const int64_t Pi = (int64_t) P;
+    static constexpr int64_t Pi = (int64_t) P;
     const int64_t nn = (int64_t) n;
     return ((uint32_t) (nn % Pi + Pi)) % P;
 }

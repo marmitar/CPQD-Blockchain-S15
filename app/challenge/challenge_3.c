@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <limits.h>
 #include <sgx_eid.h>
 #include <sgx_error.h>
 #include <stddef.h>
@@ -9,7 +11,7 @@
 #include "enclave_u.h"
 
 /** Number of characters for the secret word. */
-#define WORD_LEN 20
+static constexpr size_t WORD_LEN = 20;
 
 /**
  * A contender for the secret word, not NUL-terminated.
@@ -54,7 +56,7 @@ static word_t update_secret(word_t secret, const word_t guess, const char letter
  * calls to `ecall_palavra_secreta` or less are required.
  */
 extern sgx_status_t challenge_3(sgx_enclave_id_t eid) {
-    static const char LETTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    constexpr char LETTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const size_t N_LETTERS = strlen(LETTERS);
 
     word_t secret = make_word(LETTERS[0]);
@@ -70,7 +72,8 @@ extern sgx_status_t challenge_3(sgx_enclave_id_t eid) {
 
         if (rv == 0) {
 #ifdef DEBUG
-            printf("Challenge 3: secret = %*s\n", WORD_LEN, guess.data);
+            static_assert(WORD_LEN <= INT_MAX);
+            printf("Challenge 3: secret = %*s\n", (int) WORD_LEN, guess.data);
 #endif
             return SGX_SUCCESS;
         }

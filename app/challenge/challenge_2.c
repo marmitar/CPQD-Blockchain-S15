@@ -14,8 +14,8 @@
  * calls to `ecall_verificar_senha` are required.
  */
 extern sgx_status_t challenge_2(sgx_enclave_id_t eid) {
-    static const unsigned MIN_PASSWORD = 0;
-    static const unsigned MAX_PASSWORD = 99'999;
+    static constexpr unsigned MIN_PASSWORD = 0;
+    static constexpr unsigned MAX_PASSWORD = 99'999;
 
     for (unsigned password = MIN_PASSWORD; password <= MAX_PASSWORD; password++) {
         int rv = -1;

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <math.h>
@@ -32,34 +33,34 @@ static double invnorm(const double p) {
     assume(isless(0, p) && isless(p, 1));
 
     // coefficients in rational approximations
-    static const double a1 = -3.969683028665376e+01;
-    static const double a2 = 2.209460984245205e+02;
-    static const double a3 = -2.759285104469687e+02;
-    static const double a4 = 1.383577518672690e+02;
-    static const double a5 = -3.066479806614716e+01;
-    static const double a6 = 2.506628277459239e+00;
+    static constexpr double a1 = -3.969683028665376e+01;
+    static constexpr double a2 = 2.209460984245205e+02;
+    static constexpr double a3 = -2.759285104469687e+02;
+    static constexpr double a4 = 1.383577518672690e+02;
+    static constexpr double a5 = -3.066479806614716e+01;
+    static constexpr double a6 = 2.506628277459239e+00;
 
-    static const double b1 = -5.447609879822406e+01;
-    static const double b2 = 1.615858368580409e+02;
-    static const double b3 = -1.556989798598866e+02;
-    static const double b4 = 6.680131188771972e+01;
-    static const double b5 = -1.328068155288572e+01;
+    static constexpr double b1 = -5.447609879822406e+01;
+    static constexpr double b2 = 1.615858368580409e+02;
+    static constexpr double b3 = -1.556989798598866e+02;
+    static constexpr double b4 = 6.680131188771972e+01;
+    static constexpr double b5 = -1.328068155288572e+01;
 
-    static const double c1 = -7.784894002430293e-03;
-    static const double c2 = -3.223964580411365e-01;
-    static const double c3 = -2.400758277161838e+00;
-    static const double c4 = -2.549732539343734e+00;
-    static const double c5 = 4.374664141464968e+00;
-    static const double c6 = 2.938163982698783e+00;
+    static constexpr double c1 = -7.784894002430293e-03;
+    static constexpr double c2 = -3.223964580411365e-01;
+    static constexpr double c3 = -2.400758277161838e+00;
+    static constexpr double c4 = -2.549732539343734e+00;
+    static constexpr double c5 = 4.374664141464968e+00;
+    static constexpr double c6 = 2.938163982698783e+00;
 
-    static const double d1 = 7.784695709041462e-03;
-    static const double d2 = 3.224671290700398e-01;
-    static const double d3 = 2.445134137142996e+00;
-    static const double d4 = 3.754408661907416e+00;
+    static constexpr double d1 = 7.784695709041462e-03;
+    static constexpr double d2 = 3.224671290700398e-01;
+    static constexpr double d3 = 2.445134137142996e+00;
+    static constexpr double d4 = 3.754408661907416e+00;
 
     // break-points
-    static const double p_low = 0.02425;
-    static const double p_high = 1 - p_low;
+    static constexpr double p_low = 0.02425;
+    static constexpr double p_high = 1 - p_low;
 
     double x = NAN;
     // rational approximation for lower region
@@ -93,7 +94,7 @@ static double invnorm(const double p) {
 }
 
 /** Pre-defined number of rounds in each Rock, Paper, Scissors game. */
-#define ROUNDS 20
+static constexpr size_t ROUNDS = 20;
 
 /**
  * Answers for each round in Rock, Paper, Scissors game.
@@ -130,13 +131,14 @@ extern unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
  * `UINT8_MAX` is also returned to stop the solution and an error code is written to `status`.
  */
 static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL status) {
+    static_assert(ROUNDS <= INT_MAX);
     int wins = INT_MIN;
 
     sgx_status_t rstatus = ecall_pedra_papel_tesoura(eid, &wins);
     if unlikely (rstatus != SGX_SUCCESS) {
         *status = rstatus;
         return UINT8_MAX;
-    } else if unlikely (wins < 0 || wins > ROUNDS) {
+    } else if unlikely (wins < 0 || wins > (int) ROUNDS) {
         printf("Challenge 5: Invalid ecall_pedra_papel_tesoura wins = %d\n", wins);
         *status = SGX_ERROR_UNEXPECTED;
         return UINT8_MAX;
@@ -152,7 +154,7 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
  */
 static pcg32_random_t seed_random_state(void) {
     /** Randomly generated fixed seed (`openssl rand -hex 16`). */
-    static const uint64_t SEED[2] = {0x4b'3b'71'75'60'aa'68'8b, 0x9b'13'2b'73'f3'91'a8'a0};
+    constexpr uint64_t SEED[2] = {0x4b'3b'71'75'60'aa'68'8b, 0x9b'13'2b'73'f3'91'a8'a0};
 
     pcg32_random_t state = {0};
     pcg32_srandom_r(&state, SEED[0], SEED[1]);
@@ -222,9 +224,9 @@ static double two_sided_sample_size(
  */
 static size_t sample_size(const double confidence, const double power, const size_t start) {
     /** Correct choice always scores, and drawing or losing never does. So 1 score higher is expected. */
-    static const double DELTA = 1;
+    static constexpr double DELTA = 1;
     /** The probability of winning in a single round. */
-    static const double P = 1.0 / 3.0;
+    static constexpr double P = 1.0 / 3.0;
     /* Standard deviation for the Bernoulli distribution. */
     const double sigma = sqrt(P * (1 - P));
 
@@ -259,9 +261,9 @@ static uint32_t pick_position(
     const size_t position
 ) {
     /** 20% chance of assuming a value is better when all are equal. */
-    static const double CONFIDENCE = 0.80;
+    static constexpr double CONFIDENCE = 0.80;
     /** 30% chance of not picking the best value when there's one. */
-    static const double POWER = 0.70;
+    static constexpr double POWER = 0.70;
 
     const size_t n = sample_size(CONFIDENCE, POWER, position + 1);
 
