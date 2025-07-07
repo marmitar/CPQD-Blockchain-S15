@@ -7,25 +7,6 @@
 #include "enclave_t.h"
 
 /**
- * Example code.
- */
-extern int ecall_name_check(const char *NULLABLE name) {
-    (void) name;
-    return -1;
-}
-
-/**
- * Challenge 1: Call the Enclave
- * -----------------------------
- *
- * Just call this function passing your full name.
- */
-extern int ecall_verificar_aluno(const char *NULLABLE nome) {
-    (void) nome;
-    return -1;
-}
-
-/**
  * Challenge 2: Crack the Password
  * -------------------------------
  *

@@ -101,10 +101,15 @@ untrusted_enclave = custom_target('enclave_u',
     output: ['enclave_u.c', 'enclave_u.h'],
 )
 
+challenges = files(
+    'challenge/challenge_1.c',
+)
+
 enclave_lds = files(debugging_enabled ? 'enclave_debug.lds' : 'enclave.lds')
 
-enclave = shared_library('enclave.so',
+enclave = shared_library('enclave',
     files('enclave.c'),
+    challenges,
     trusted_enclave,
     include_directories: include,
     dependencies: [sgx_trts],
