@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../enclave.h"
@@ -157,7 +158,7 @@ static bool match_name(const char *NULLABLE str, const size_t n, const unique_st
     }
 
     // first name
-    const string_t end_first = consume_name(str, stop);
+    const char *const end_first = consume_name(str, stop);
     if unlikely (end_first == NULL) {
         return false;
     }
@@ -183,7 +184,7 @@ static bool match_name(const char *NULLABLE str, const size_t n, const unique_st
         }
 
         // no other name found, end of string reached
-        const string_t end = consume_name(str, stop);
+        const char *const end = consume_name(str, stop);
         if unlikely (end == NULL) {
             break;
         }

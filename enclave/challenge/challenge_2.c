@@ -1,4 +1,4 @@
-#include <stdbool.h>
+#include <stdio.h>
 
 #include "../enclave.h"
 #include "defines.h"
