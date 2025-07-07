@@ -25,5 +25,5 @@ custom_target('disassembly',
   output: 'app.s',
   command: ['objdump', '-d', '-S', '--no-show-raw-insn', '--no-addresses', '@INPUT@'],
   capture: true,
-  build_by_default: true
+  build_by_default: true,
 )

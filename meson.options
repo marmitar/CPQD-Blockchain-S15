@@ -14,5 +14,12 @@ option('sgx_mode',
 option('student_name',
     type: 'string',
     value: 'Tiago de Paula Alves',
-    description: 'Name of the student to be matched. Will be titlecased.'
+    description: 'Name of the student to be matched. Will be titlecased.',
+)
+
+option('enclave_seed',
+    type: 'integer',
+    min: -1,
+    value: -1,
+    description: 'Seed used for all challenges. Use -1 for random.',
 )

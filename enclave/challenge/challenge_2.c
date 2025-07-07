@@ -1,8 +1,8 @@
+#include <pcg_basic.h>
 #include <stdio.h>
 
 #include "../enclave.h"
 #include "defines.h"
-#include "enclave_config.h"
 #include "enclave_t.h"
 
 /** Minimum value for the password (inclusive). */
@@ -10,8 +10,18 @@ static constexpr unsigned MIN_PASSWORD = 0;
 /** Maximum value for the password (inclusive). */
 static constexpr unsigned MAX_PASSWORD = 99'999;
 
-/** Randomly generated fixed password (`openssl rand -hex 8`). */
-static constexpr unsigned PASSWORD = CHALLENGE_2_PASSWORD % MAX_PASSWORD;
+[[nodiscard("pure function"), gnu::const, gnu::cold]]
+/**
+ * Generate password from fixed seed.
+ */
+static unsigned password(void) {
+    static constexpr const uint64_t STREAM = 0x2222;
+    pcg32_random_t rng = seeded_pcg_rng(STREAM);
+
+    const unsigned result = pcg32_boundedrand_r(&rng, MAX_PASSWORD - MIN_PASSWORD) + MIN_PASSWORD;
+    assume(MIN_PASSWORD <= result && result <= MAX_PASSWORD);
+    return result;
+}
 
 [[nodiscard("error must be checked"), gnu::const, gnu::leaf, gnu::nothrow]]
 /**
@@ -23,9 +33,14 @@ static constexpr unsigned PASSWORD = CHALLENGE_2_PASSWORD % MAX_PASSWORD;
  * HINT: the password is an integer between 0 and 99999.
  */
 extern int ecall_verificar_senha(unsigned int senha) {
-    static_assert(MIN_PASSWORD <= PASSWORD && PASSWORD <= MAX_PASSWORD);
+    static unsigned expected_password = 0;
+    static bool initialized = false;
+    if unlikely (!initialized) {
+        expected_password = password();
+        initialized = true;
+    }
 
-    if likely (senha != PASSWORD) {
+    if likely (senha != expected_password) {
         return -1;
     }
 
@@ -39,7 +54,7 @@ extern int ecall_verificar_senha(unsigned int senha) {
         "------------------------------------------------\n"
         "\n",
         // clang-format on
-        PASSWORD
+        expected_password
     );
 
     return 0;

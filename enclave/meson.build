@@ -1,3 +1,5 @@
+fs = import('fs')
+
 # # # # # # # # # # # #
 # SGX TOOLS AND LIBS  #
 
@@ -9,7 +11,6 @@ SGX_LDLIBRARY = SGX_SDK / 'sdk_libs'
 SGX_LIBDIR = SGX_SDK / 'lib64'
 
 if get_option('sgx_mode') == 'auto' and not meson.is_cross_build()
-    fs = import('fs')
     if fs.read('/proc/cpuinfo', encoding: 'utf-8').split().contains('sgx')
         SGX_SIM = ''
     else
@@ -110,12 +111,37 @@ foreach name : get_option('student_name').split()
 endforeach
 student_name += '}'
 
-configure_file(output: 'enclave_config.h',
-  configuration: {
-    'CHALLENGE_1_MAX_LENGTH': 4096,
-    'CHALLENGE_1_EXPECTED_NAME': student_name,
-    'CHALLENGE_2_PASSWORD': 0x037c21a547ab1930,
-  }
+write_integer_to_file = '''
+import sys, struct
+with open(sys.argv[1], 'wb') as file:
+    file.write(struct.pack('<Q', int(sys.argv[2])))
+'''
+
+enclave_seed = custom_target('enclave_seed.bin',
+    command: get_option('enclave_seed') < 0
+        ? ['openssl', 'rand', '-out', '@OUTPUT@', '8']
+        : ['python3', '-c', write_integer_to_file, '@OUTPUT@', '@0@'.format(get_option('enclave_seed'))],
+    output: 'enclave_seed.bin',
+    build_always_stale: true,
+)
+
+enclave_cfg_data = configuration_data()
+enclave_cfg_data.set(
+    'MAX_STRING_LENGTH', 4096,
+    description: 'Maximum input string length to check',
+)
+enclave_cfg_data.set(
+    'STUDENT_NAME', student_name,
+    description: 'Name of the student to be matched.',
+)
+enclave_cfg_data.set_quoted(
+    'SEED_FILE', enclave_seed.full_path(),
+    description: 'Seed used for all challenges.',
+)
+
+configure_file(
+    output: 'enclave_config.h',
+    configuration: enclave_cfg_data,
 )
 
 challenges = files(
@@ -130,7 +156,7 @@ enclave = shared_library('enclave',
     challenges,
     trusted_enclave,
     include_directories: include,
-    dependencies: [sgx_trts],
+    dependencies: [sgx_trts, pcg],
     link_depends: [enclave_lds],
     link_args: [
         '-Wl,--version-script=@0@'.format(enclave_lds[0].full_path()),
