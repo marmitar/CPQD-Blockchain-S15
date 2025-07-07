@@ -72,8 +72,8 @@ sgx_urts = declare_dependency(
     ],
 ).as_system('system')
 
-# # # # # # # # # # # # #
-# COMPILING THE ENCLAVE #
+# # # # # # # # # # #
+# ENCLAVE INTERFACE #
 
 trusted_enclave = custom_target('enclave_t',
     command: [
@@ -101,6 +101,22 @@ untrusted_enclave = custom_target('enclave_u',
     output: ['enclave_u.c', 'enclave_u.h'],
 )
 
+# # # # # # # # # #
+# ENCLAVE BINARY  #
+
+student_name = '{'
+foreach name : get_option('student_name').split()
+    student_name += '"@0@@1@",'.format(name[0].to_upper(), name.substring(1).to_lower())
+endforeach
+student_name += '}'
+
+configure_file(output: 'enclave_config.h',
+  configuration: {
+    'CHALLENGE_1_MAX_LENGTH': 4096,
+    'CHALLENGE_1_EXPECTED_NAME': student_name,
+  }
+)
+
 challenges = files(
     'challenge/challenge_1.c',
 )
@@ -120,6 +136,9 @@ enclave = shared_library('enclave',
     name_prefix: '',
     name_suffix: 'so',
 )
+
+# # # # # # # # # # #
+# ENCLAVE SIGNATURE #
 
 enclave_pem = custom_target(
     command: ['openssl', 'genrsa', '-out', '@OUTPUT@', '-3', '3072'],

@@ -6,10 +6,11 @@
 
 #include "../enclave.h"
 #include "defines.h"
+#include "enclave_config.h"
 #include "enclave_t.h"
 
 /** Maximum string length to check. */
-static constexpr size_t MAX_LENGTH = 4096;
+static constexpr size_t MAX_LENGTH = CHALLENGE_1_MAX_LENGTH;
 
 [[nodiscard("pure function"), gnu::const]]
 /**
@@ -226,7 +227,7 @@ extern int ecall_name_check(const char *NULLABLE name) {
  * Just call this function passing your full name.
  */
 extern int ecall_verificar_aluno(const char *NULLABLE nome) {
-    static const unique_string_t EXPECTED_NAME[] = {"Tiago", "De", "Paula", "Alves"};
+    static const unique_string_t EXPECTED_NAME[] = CHALLENGE_1_EXPECTED_NAME;
     const size_t len = sizeof(EXPECTED_NAME) / sizeof(EXPECTED_NAME[0]);
 
     const bool ok = match_name(nome, len, EXPECTED_NAME);

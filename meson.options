@@ -10,3 +10,9 @@ option('sgx_mode',
     value: 'auto',
     description: 'Select between hardware SGX or simulated SGX. Use \'auto\' for hardware detection during build.',
 )
+
+option('student_name',
+    type: 'string',
+    value: 'Tiago de Paula Alves',
+    description: 'Name of the student to be matched. Will be titlecased.'
+)
