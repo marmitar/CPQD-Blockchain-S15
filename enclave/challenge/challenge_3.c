@@ -22,13 +22,19 @@ typedef struct word {
 } word_t;
 
 [[nodiscard("pure function"), gnu::const]]
+/**
+ * Word with all positions set to `\0`.
+ */
 static word_t empty_word(void) {
     word_t empty = {0};
-    memset(&empty, 0, sizeof(empty));
+    memset(&empty, '\0', sizeof(empty));
     return empty;
 }
 
 [[nodiscard("useless call otherwise"), gnu::nonnull(1)]]
+/**
+ * Generate a single letter from the specified list. Returns `EOF` on errors.
+ */
 static char generate_letter(drbg_ctr128_t *NONNULL rng) {
     constexpr char LETTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const size_t N_LETTERS = strlen(LETTERS);
@@ -82,6 +88,9 @@ extern int ecall_palavra_secreta(char palavra[NULLABLE WORD_LEN]) {
     }
 
     if unlikely (palavra == NULL) {
+#ifdef DEBUG
+        printf("[DEBUG] ecall_palavra_secreta: input is null\n");
+#endif
         return -1;
     }
 

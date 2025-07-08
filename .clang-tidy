@@ -6,7 +6,6 @@ Checks: '
   performance-*,
   modernize-*,
   -modernize-use-nullptr,
-  -modernize-macro-to-enum,
   bugprone-*,
   -bugprone-easily-swappable-parameters,
   cert-*-c,
@@ -58,7 +57,6 @@ CheckOptions:
     bits/types/struct_timeval.h'
   bugprone-easily-swappable-parameters.QualifiersMix: false
   bugprone-easily-swappable-parameters.ModelImplicitConversions: false
-  bugprone-easily-swappable-parameters.MinimumLength: 3
   bugprone-reserved-identifier.AllowedIdentifiers: _GNU_SOURCE
   cert-dcl16-c.NewSuffixes: 'L;LL;LU;LLU'
   cert-dcl37-c.AllowedIdentifiers: _GNU_SOURCE
@@ -70,6 +68,7 @@ CheckOptions:
   google-readability-function-size.StatementThreshold: 800
   google-readability-namespace-comments.ShortNamespaceLines: 10
   google-readability-namespace-comments.SpacesBeforeComments: 2
+  readability-magic-numbers.IgnoredIntegerValues: 1;2;3;4;5
   llvm-else-after-return.WarnOnConditionVariables: false
   llvm-else-after-return.WarnOnUnfixable: false
   llvm-qualified-auto.AddConstToQualified: false

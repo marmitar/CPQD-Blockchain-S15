@@ -99,7 +99,7 @@ bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output) {
     );
 
     if unlikely (status != SGX_SUCCESS) {
-        printf("[DEBUG] drbg_rand failed: status=0x%04x\n", status);
+        printf("[ENCLAVE] drbg_rand failed: status=0x%04x\n", status);
         return false;
     }
     return true;

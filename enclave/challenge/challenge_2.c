@@ -12,7 +12,7 @@ static constexpr unsigned MAX_PASSWORD = 99'999;
 
 [[nodiscard("pure function"), gnu::const, gnu::cold]]
 /**
- * Generate password from fixed seed.
+ * Generate password from fixed seed. Returns `UINT_MAX` on errors.
  */
 static unsigned password(void) {
     drbg_ctr128_t rng = drbg_seeded_init(2);
@@ -45,6 +45,14 @@ extern int ecall_verificar_senha(unsigned int senha) {
             return -2;
         }
         initialized = true;
+    }
+    assume(MIN_PASSWORD <= expected_password && expected_password <= MAX_PASSWORD);
+
+    if unlikely (senha < MIN_PASSWORD || senha > MAX_PASSWORD) {
+#ifdef DEBUG
+        printf("[DEBUG] ecall_verificar_senha: invalid password=%u\n", senha);
+#endif
+        return -1;
     }
 
     if likely (senha != expected_password) {

@@ -9,15 +9,23 @@
 #include "defines.h"
 #include "enclave_t.h"
 
+/**
+ * The prime base of the polynomial, used for modular arithmetic.
+ */
 static constexpr int64_t P = 2'147'483'647;
 
+// The coefficients, promoted to `int64_t` to avoid overflow during multiplication.
 static int64_t A = INT_MIN;
 static int64_t B = INT_MIN;
 static int64_t C = INT_MIN;
 
+// Must be checked before using the coefficients.
 static bool initialized = false;
 
 [[nodiscard("pure function"), gnu::const, gnu::cold]]
+/**
+ * Generate random polynomial coefficients and populates `A`, `B` and `C` with them. Returns `false` on errors.
+ */
 static bool generate_coefficients(void) {
     drbg_ctr128_t rng = drbg_seeded_init(4);
 
@@ -76,6 +84,9 @@ extern int ecall_polinomio_secreto(const int x) {
     }
 
     if unlikely (x == 0) {
+#ifdef DEBUG
+        printf("[DEBUG] ecall_polinomio_secreto: invalid x=%d\n", x);
+#endif
         abort();
     }
 
