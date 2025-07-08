@@ -1,9 +1,10 @@
-#include <inttypes.h>
-#include <pcg_basic.h>
+#include <limits.h>
 #include <sgx_error.h>
+#include <sgx_tcrypto.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "./enclave.h"
 #include "defines.h"
@@ -109,14 +110,47 @@ int printf(const char *NONNULL fmt, ...) {
     return likely(written < MAX_BYTES) ? written : MAX_BYTES;
 }
 
-/** Initialize PRNG with given seed. */
-pcg32_random_t seeded_pcg_rng(const uint64_t stream_selector) {
-    const uint64_t seed = ENCLAVE_SEED;
-#ifdef DEBUG
-    printf("[DEBUG] seeded_pcg_rng: seed=0x%016" PRIx64 ", stream=%" PRIu64 "\n", seed, stream_selector);
-#endif
+[[nodiscard("pure function"), gnu::const]]
+/**
+ * Initialize the PRNG using an input `seed` and a `stream` selector.
+ */
+static drbg_ctr128_t drbg_init(const uint64_t seed, const uint64_t stream) {
+    drbg_ctr128_t drbg = {0};
 
-    pcg32_random_t rng = {0};
-    pcg32_srandom_r(&rng, seed, stream_selector);
-    return rng;
+    const uint64_t key[] = {seed, stream};
+    static_assert(sizeof(key) == sizeof(drbg.key));
+
+    memcpy(&(drbg.key), &key, sizeof(drbg.key));
+    memset(&(drbg.ctr), 0, sizeof(drbg.ctr));
+    return drbg;
+}
+
+/**
+ * Initialize the PRNG using the seed file and a `stream` selector.
+ */
+drbg_ctr128_t drbg_seeded_init(const uint64_t stream) {
+    return drbg_init(ENCLAVE_SEED, stream);
+}
+
+/**
+ * Generate a pseudo-random number from the DRBG sequence.
+ */
+bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output) {
+    // randomized plaintext is useless in CTR mode
+    const uint128_t PLAINTEXT = 0;
+
+    const sgx_status_t status = sgx_aes_ctr_encrypt(
+        (const sgx_aes_ctr_128bit_key_t *) &(drbg->key),
+        (const uint8_t *) &PLAINTEXT,
+        sizeof(PLAINTEXT),
+        (uint8_t *) &(drbg->ctr),
+        sizeof(drbg->ctr) * CHAR_BIT,
+        (uint8_t *) output
+    );
+
+    if unlikely (status != SGX_SUCCESS) {
+        printf("[DEBUG] drbg_rand failed: status=0x%04x\n", status);
+        return false;
+    }
+    return true;
 }

@@ -1,7 +1,6 @@
 #ifndef ENCLAVE_H
 #define ENCLAVE_H
 
-#include <pcg_basic.h>
 #include <stdint.h>
 
 #include "defines.h"
@@ -22,11 +21,39 @@
  */
 int printf(const char *NONNULL fmt, ...);
 
+/** Unsigned 128-bit number. GCC and Clang extensions. */
+typedef __uint128_t uint128_t;
+
+/** Maximum value for `uint128_t`. */
+static constexpr uint128_t UINT128_MAX = (uint128_t) -1;
+
+/**
+ * Deterministic Random Bit Generator (DRBG).
+ *
+ * Note: should not be used for more than 2**32 iterations, because of CTR mode wrapping.
+ * Note: this implementation is also not thread-safe.
+ */
+typedef struct drbg_ctr128 {
+    /** 128-bit seed + stream selector */
+    uint128_t key;
+    /** 128-bit block counter */
+    uint128_t ctr;
+} drbg_ctr128_t;
+
 [[nodiscard("pure function"), gnu::const, gnu::cold, gnu::nothrow, gnu::leaf]]
 /**
- * Initialize a PRNG using the seed file. The `stream_selector` allow selecting a completing different stream.
- * Note: each different PRNG should use a unique strea selector, since the seed is the same.
+ * Initialize the PRNG using the seed file. The `stream` selector allow picking a different generated stream.
+ *
+ * Note: each different PRNG should use a unique stream selector, since the seed is the same.s
  */
-pcg32_random_t seeded_pcg_rng(uint64_t stream_selector);
+drbg_ctr128_t drbg_seeded_init(uint64_t stream);
+
+[[nodiscard("error must be checked"), gnu::nonnull(1, 2), gnu::hot, gnu::nothrow, gnu::leaf]]
+/**
+ * Generate a pseudo-random number from the DRBG sequence.
+ *
+ * @return `true` on success, or `false` if AES CTR failed.
+ */
+bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output);
 
 #endif /* ENCLAVE_H */

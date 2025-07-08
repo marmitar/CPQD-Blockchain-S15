@@ -1,4 +1,3 @@
-#include <pcg_basic.h>
 #include <stdio.h>
 
 #include "../enclave.h"
@@ -15,11 +14,20 @@ static constexpr unsigned MAX_PASSWORD = 99'999;
  * Generate password from fixed seed.
  */
 static unsigned password(void) {
-    pcg32_random_t rng = seeded_pcg_rng(2);
+    drbg_ctr128_t rng = drbg_seeded_init(2);
 
-    const unsigned result = pcg32_boundedrand_r(&rng, MAX_PASSWORD - MIN_PASSWORD) + MIN_PASSWORD;
-    assume(MIN_PASSWORD <= result && result <= MAX_PASSWORD);
-    return result;
+    static constexpr uint128_t LENGTH = (uint128_t) (MAX_PASSWORD - MIN_PASSWORD);
+    static constexpr uint128_t THRESHOLD = UINT128_MAX - UINT128_MAX % LENGTH;
+
+    while (true) {
+        uint128_t value = UINT128_MAX;
+        const bool ok = drbg_rand(&rng, &value);
+        assume(ok);
+
+        if likely (value < THRESHOLD) {
+            return MIN_PASSWORD + (unsigned) (value % LENGTH);
+        }
+    }
 }
 
 [[nodiscard("error must be checked"), gnu::const, gnu::leaf, gnu::nothrow]]

@@ -141,7 +141,7 @@ enclave = shared_library('enclave',
     challenges,
     trusted_enclave,
     include_directories: include,
-    dependencies: [sgx_trts, pcg],
+    dependencies: [sgx_trts],
     link_depends: [enclave_lds],
     link_args: [
         '-Wl,--version-script=@0@'.format(enclave_lds[0].full_path()),
