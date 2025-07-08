@@ -12,31 +12,6 @@
 #include "enclave_t.h"
 
 /**
- * Challenge 5: Rock, Paper, Scissors
- * ----------------------------------
- *
- * Play 20 rounds of rock-paper-scissors against the enclave. You must win all 20 rounds.
- *
- * How it works:
- *   1. The enclave picks rock (0), paper (1) or scissors (2).
- *   2. It ALWAYS plays the same move in round 1.
- *   3. It calls `ocall_pedra_papel_tesoura`, passing the current round number, counting 1, 2, 3... up to 20.
- *   4. It compares the moves; if you win, it increments your win count.
- *   5. The enclave's moves are deterministic, but the result of the previous round INFLUENCES its next move.
- *   6. After round 20 the enclave returns how many times YOU won. If the return value is 20 the challenge is
- *      complete and the console prints every round and outcome.
- *
- * - Returns -1 if your OCALL returns anything other than 0, 1 or 2.
- * - The enclave aborts if your OCALL fails or aborts.
- *
- * HINT: the strategy is deterministic; as long as the sequence of previous results is the same, the enclave
- *  plays the same moves.
- **/
-extern int ecall_pedra_papel_tesoura(void) {
-    return -1;
-}
-
-/**
  * `printf`-like function for the enclave. Buffer limited to `BUFSIZ` (8192) bytes.
  */
 int printf(const char *NONNULL fmt, ...) {

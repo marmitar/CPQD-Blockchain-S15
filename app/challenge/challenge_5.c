@@ -377,7 +377,7 @@ static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
 
         // when we finally find a prefix with next position open for increment,
         // we update that and reset all other positions to zero
-        answers[i - 1] = (uint8_t) (answers[i - 1] + 1) % 3;
+        answers[i - 1] = (uint8_t) ((answers[i - 1] + 1) % 3);
         memset(answers + i, 0, (ROUNDS - i) * sizeof(uint8_t));
     }
 }

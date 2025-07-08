@@ -134,6 +134,7 @@ challenges = files(
     'challenge/challenge_2.c',
     'challenge/challenge_3.c',
     'challenge/challenge_4.c',
+    'challenge/challenge_5.c',
 )
 
 enclave_lds = files(debugging_enabled ? 'enclave_debug.lds' : 'enclave.lds')
