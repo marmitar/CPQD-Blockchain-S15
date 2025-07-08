@@ -12,37 +12,6 @@
 #include "enclave_t.h"
 
 /**
- * Challenge 4: Secret Polynomial
- * ------------------------------
- *
- * this function returns ((x*x*a) + (x*b) + c) % 2147483647
- * Assumption: -10^8 < (a + b + c) < 10^8
- *
- * Use it to help you discover the polynomial before calling `ecall_verificar_polinomio`.
- * NOTE: this ECALL aborts if you pass zero.
- *
- * HINT: the prime 2147483647 is irrelevant except when you supply *       a very large x.
- */
-extern int ecall_polinomio_secreto(int x) {
-    (void) x;
-    return 0;
-}
-
-/**
- * Challenge 4: Secret Polynomial
- * ------------------------------
- *
- * Verify the polynomial coefficients.
- *
- * HINT: -10^8 < (a + b + c) < 10^8.
- * HINT: the function is deliberately hard to brute-force.
- */
-extern int ecall_verificar_polinomio(int a, int b, int c) {
-    (void) (a + b + c);
-    return 0;
-}
-
-/**
  * Challenge 5: Rock, Paper, Scissors
  * ----------------------------------
  *
