@@ -25,7 +25,7 @@ int printf(const char *NONNULL fmt, ...);
 typedef __uint128_t uint128_t;
 
 /** Maximum value for `uint128_t`. */
-static constexpr uint128_t UINT128_MAX = (uint128_t) -1;
+[[maybe_unused]] static constexpr uint128_t UINT128_MAX = (uint128_t) -1;
 
 /**
  * Deterministic Random Bit Generator (DRBG).
@@ -50,10 +50,18 @@ drbg_ctr128_t drbg_seeded_init(uint64_t stream);
 
 [[nodiscard("error must be checked"), gnu::nonnull(1, 2), gnu::hot, gnu::nothrow, gnu::leaf]]
 /**
- * Generate a pseudo-random number from the DRBG sequence.
+ * Generate a pseudo-random number in `[0,UINT128_MAX)` from the DRBG sequence.
  *
  * @return `true` on success, or `false` if AES CTR failed.
  */
 bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output);
+
+[[nodiscard("error must be checked"), gnu::nonnull(1, 2), gnu::hot, gnu::nothrow, gnu::leaf]]
+/**
+ * Generate a pseudo-random number in the range `[0,bound)` from the DRBG sequence.
+ *
+ * @return `true` on success, or `false` if AES CTR failed.
+ */
+bool drbg_rand_bounded(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, uint128_t bound);
 
 #endif /* ENCLAVE_H */
