@@ -132,6 +132,7 @@ configure_file(
 challenges = files(
     'challenge/challenge_1.c',
     'challenge/challenge_2.c',
+    'challenge/challenge_3.c',
 )
 
 enclave_lds = files(debugging_enabled ? 'enclave_debug.lds' : 'enclave.lds')

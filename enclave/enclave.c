@@ -11,25 +11,6 @@
 #include "enclave_config.h"
 #include "enclave_t.h"
 
-/** Number of characters for the secret word. */
-#define WORD_LEN 20
-
-/**
- * Challenge 3: Find the Secret Word
- * ---------------------------------
- *
- * The enclave replaces wrong letters with '-' and keeps the letters you guessed correctly.
- * Returns 0 on success, negative otherwise.
- *
- * HINT: the secret word contains only uppercase letters, no spaces, diacritics or digits.
- */
-extern int ecall_palavra_secreta(char palavra[NULLABLE WORD_LEN]) {
-    for (unsigned i = 0; i < WORD_LEN; i++) {
-        palavra[i] = '-';
-    }
-    return -1;
-}
-
 /**
  * Challenge 4: Secret Polynomial
  * ------------------------------
