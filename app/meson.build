@@ -20,7 +20,7 @@ app = executable('app',
     link_args: ['-Wl,-z,pack-relative-relocs'],
 )
 
-custom_target('disassembly',
+custom_target('app.s',
   input: app,
   output: 'app.s',
   command: ['objdump', '-d', '-S', '--no-show-raw-insn', '--no-addresses', '@INPUT@'],

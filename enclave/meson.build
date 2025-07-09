@@ -171,4 +171,13 @@ generated_enclave = custom_target('enclave.signed.so',
     ],
     input: enclave,
     output: 'enclave.signed.so',
+    build_by_default: true,
+)
+
+custom_target('enclave.s',
+  input: generated_enclave,
+  output: 'enclave.s',
+  command: ['objdump', '-d', '-S', '--no-show-raw-insn', '--no-addresses', '@INPUT@'],
+  capture: true,
+  build_by_default: true,
 )
