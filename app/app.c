@@ -18,7 +18,7 @@ extern void ocall_print_string(const char *NULLABLE str) {
     /* Proxy/Bridge will check the length and null-terminate
      * the input string to prevent buffer overflow.
      */
-    puts(likely(str != NULL) ? str : "<null>");
+    printf("%s", likely(str != NULL) ? str : "<null>");
 }
 
 /* Application entry */

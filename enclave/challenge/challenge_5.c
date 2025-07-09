@@ -161,23 +161,19 @@ extern int ecall_pedra_papel_tesoura(void) {
 
     assume(user_wins <= ROUNDS);
     if unlikely (user_wins >= ROUNDS) {
+        printf("\n%s\n", SEPARATOR);
         printf(
             // clang-format off
-            "\n"
-            "------------------------------------------------\n"
-            "\n"
             "[ENCLAVE] DESAFIO 5 CONCLUIDO!! V (vitória), D (derrota) E (empate)\n"
             "          ENCLAVE JOGADAS: %s\n"
             "             SUAS JOGADAS: %s\n"
-            "                RESULTADO: %s\n"
-            "\n"
-            "------------------------------------------------\n"
-            "\n",
+            "                RESULTADO: %s\n",
             // clang-format on
             enclave_sequence,
             app_sequence,
             results
         );
+        printf("%s\n", SEPARATOR);
     }
     return (int) user_wins;
 }

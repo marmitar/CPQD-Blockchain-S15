@@ -116,19 +116,8 @@ extern int ecall_verificar_polinomio(int a, int b, int c) {
         return 0;
     }
 
-    printf(
-        // clang-format off
-        "\n"
-        "------------------------------------------------\n"
-        "\n"
-        "DESAFIO 4 CONCLUIDO!! os polinomios são: A=%" PRIi64 ", B=%" PRIi64 ", C=%" PRIi64 "\n"
-        "\n"
-        "------------------------------------------------\n"
-        "\n",
-        // clang-format on
-        A,
-        B,
-        C
-    );
+    printf("\n%s\n", SEPARATOR);
+    printf("[ENCLAVE] DESAFIO 4 CONCLUIDO!! os polinomios são: A=%" PRIi64 ", B=%" PRIi64 ", C=%" PRIi64 "\n", A, B, C);
+    printf("%s\n", SEPARATOR);
     return 1;
 }

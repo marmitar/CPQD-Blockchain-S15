@@ -5,8 +5,11 @@
 
 #include "defines.h"
 
+/** Challenge output separator. */
+#define SEPARATOR "------------------------------------------------"
+
 // IWYU pragma: always_keep
-#if defined(__clang__)
+#if defined(__clang__) && __has_include(<__config>)
 /** __config.h is malformed with clang */
 #    undef __clang__
 #    include <__config>  // IWYU pragma: keep

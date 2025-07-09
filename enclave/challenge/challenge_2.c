@@ -59,17 +59,8 @@ extern int ecall_verificar_senha(unsigned int senha) {
         return -1;
     }
 
-    printf(
-        // clang-format off
-        "\n"
-        "------------------------------------------------\n"
-        "\n"
-        "DESAFIO 2 CONCLUIDO!! a senha é %u\n"
-        "\n"
-        "------------------------------------------------\n"
-        "\n",
-        // clang-format on
-        expected_password
-    );
+    printf("\n%s\n", SEPARATOR);
+    printf("[ENCLAVE] DESAFIO 2 CONCLUIDO!! a senha é %u\n", expected_password);
+    printf("%s\n", SEPARATOR);
     return 0;
 }

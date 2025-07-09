@@ -233,17 +233,8 @@ extern int ecall_verificar_aluno(const char *NULLABLE nome) {
         return -1;
     }
 
-    printf(
-        // clang-format off
-        "\n"
-        "------------------------------------------------\n"
-        "\n"
-        "DESAFIO 1 CONCLUIDO!! parabéns %s!!\n"
-        "\n"
-        "------------------------------------------------\n"
-        "\n",
-        // clang-format on
-        nome
-    );
+    printf("\n%s\n", SEPARATOR);
+    printf("[ENCLAVE] DESAFIO 1 CONCLUIDO!! parabéns %s!!\n", nome);
+    printf("%s\n", SEPARATOR);
     return 0;
 }
