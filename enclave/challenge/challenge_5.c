@@ -148,7 +148,9 @@ extern int ecall_pedra_papel_tesoura(void) {
             return -1;
         }
         const round_result_t res = result(enclave_play, app_play);
-        user_wins += res == WIN;
+        if (res == WIN) {
+            user_wins += 1;
+        }
 
         enclave_sequence[i] = display_play(enclave_play);
         app_sequence[i] = display_play(app_play);

@@ -5,6 +5,8 @@
 #include "defines.h"
 #include "enclave_t.h"
 
+#pragma GCC diagnostic ignored "-Wtype-limits"
+
 /** Minimum value for the password (inclusive). */
 static constexpr unsigned MIN_PASSWORD = 0;
 /** Maximum value for the password (inclusive). */

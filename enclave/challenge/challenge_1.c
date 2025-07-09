@@ -138,7 +138,7 @@ static bool name_matches_position(
 /**
  * Returns `true` if `str` is a valid name and all words matches the `expected` name, ignoring whitespace.
  */
-static bool match_name(const char *NULLABLE str, const size_t n, const unique_string_t expected[const NULLABLE n]) {
+static bool match_name(const char *NULLABLE str, const size_t n, const unique_string_t expected[const NULLABLE]) {
     assume(n > 1);
     if unlikely (str == NULL) {
 #ifdef DEBUG
