@@ -33,8 +33,7 @@ typedef __uint128_t uint128_t;
 /**
  * Deterministic Random Bit Generator (DRBG).
  *
- * Note: should not be used for more than 2**32 iterations, because of CTR mode wrapping.
- * Note: this implementation is also not thread-safe.
+ * Note: this implementation is not thread-safe.
  */
 typedef struct drbg_ctr128 {
     /** 128-bit seed + stream selector */
@@ -45,11 +44,19 @@ typedef struct drbg_ctr128 {
 
 [[nodiscard("pure function"), gnu::const, gnu::cold, gnu::nothrow, gnu::leaf]]
 /**
- * Initialize the PRNG using the seed file. The `stream` selector allow picking a different generated stream.
+ * Initialize the PRNG using the seed file. The `stream` selector allows picking a different generated stream.
  *
- * Note: each different PRNG should use a unique stream selector, since the seed is the same.s
+ * Note: each different PRNG should use a unique stream selector, since the seed is the same.
  */
 drbg_ctr128_t drbg_seeded_init(uint64_t stream);
+
+[[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow, gnu::leaf]]
+/**
+ * Replace the `stream` selector for the PRNG.
+ *
+ * Note: take care of keeping the stream selector unique throught the enclave.
+ */
+drbg_ctr128_t drbg_set_stream(drbg_ctr128_t drbg, uint64_t stream);
 
 [[nodiscard("error must be checked"), gnu::nonnull(1, 2), gnu::hot, gnu::nothrow, gnu::leaf]]
 /**

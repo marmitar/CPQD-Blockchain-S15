@@ -58,6 +58,20 @@ drbg_ctr128_t drbg_seeded_init(const uint64_t stream) {
 }
 
 /**
+ * Replace the `stream` selector for the PRNG.
+ */
+drbg_ctr128_t drbg_set_stream(drbg_ctr128_t drbg, const uint64_t stream) {
+    uint64_t key[2] = {0, 0};
+    static_assert(sizeof(key) == sizeof(drbg.key));
+
+    memcpy(key, &(drbg.key), sizeof(drbg.key));
+    key[1] = stream;
+    memcpy(&(drbg.key), key, sizeof(drbg.key));
+
+    return drbg;
+}
+
+/**
  * Generate a pseudo-random number from the DRBG sequence.
  */
 bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output) {
@@ -84,6 +98,7 @@ bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output) {
  * Generate a pseudo-random number from 0 up to (but not including) `bound`.
  */
 bool drbg_rand_bounded(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, uint128_t bound) {
+    assume(bound != 0);
     const uint128_t threshold = UINT128_MAX - UINT128_MAX % bound;
 
     while (true) {

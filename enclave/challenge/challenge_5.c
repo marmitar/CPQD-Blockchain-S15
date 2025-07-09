@@ -1,5 +1,7 @@
 #include <assert.h>
 #include <limits.h>
+#include <sgx_error.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include "../enclave.h"
@@ -52,6 +54,7 @@ typedef enum [[gnu::packed]] round_result {
     DRAW = 0,
     WIN = 1,
     LOSE = 2,
+    UNKNOWN = 4,
 } round_result_t;
 
 [[nodiscard("pure function"), gnu::const, gnu::hot]]
@@ -72,7 +75,7 @@ static round_result_t result(uint8_t enclave_play, uint8_t app_play) {
         case 2:
             return LOSE;
         default:
-            return (round_result_t) difference;
+            return UNKNOWN;
     }
 }
 
@@ -124,14 +127,14 @@ static char display_result(const round_result_t result) {
  *  plays the same moves.
  **/
 extern int ecall_pedra_papel_tesoura(void) {
-    drbg_ctr128_t rng = drbg_seeded_init(5);
+    uint64_t stream = 5;
+
+    drbg_ctr128_t rng = drbg_seeded_init(stream);
     uint8_t user_wins = 0;
 
     char enclave_sequence[ROUNDS + 1] = "";
     char app_sequence[ROUNDS + 1] = "";
     char results[ROUNDS + 1] = "";
-
-    uint8_t last_app_play = 0;
 
     static_assert(ROUNDS < UINT8_MAX);
     for (uint8_t i = 0; i < ROUNDS; i++) {
@@ -139,8 +142,6 @@ extern int ecall_pedra_papel_tesoura(void) {
         if unlikely (enclave_play == UINT8_MAX) {
             return -2;
         }
-        // FIXME: insecure implementation
-        enclave_play = (enclave_play + last_app_play) % 3;
 
         const uint8_t app_play = ocall_play(i + 1);
         if unlikely (app_play == UINT8_MAX) {
@@ -152,7 +153,10 @@ extern int ecall_pedra_papel_tesoura(void) {
         enclave_sequence[i] = display_play(enclave_play);
         app_sequence[i] = display_play(app_play);
         results[i] = display_result(res);
-        last_app_play = app_play;
+
+        // always less than 6 * 3**20 < 2**35, can't overflow
+        stream = stream * 3 + app_play;
+        rng = drbg_set_stream(rng, stream);
     }
 
     enclave_sequence[ROUNDS] = '\0';
