@@ -29,7 +29,7 @@ static unsigned password(void) {
     return MIN_PASSWORD + (unsigned) value;
 }
 
-[[nodiscard("error must be checked"), gnu::const, gnu::leaf, gnu::nothrow]]
+[[nodiscard("error must be checked"), gnu::leaf, gnu::nothrow]]
 /**
  * Challenge 2: Crack the Password
  * -------------------------------

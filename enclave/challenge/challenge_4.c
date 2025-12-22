@@ -22,7 +22,7 @@ static int64_t C = INT_MIN;
 // Must be checked before using the coefficients.
 static bool initialized = false;
 
-[[nodiscard("pure function"), gnu::const, gnu::cold]]
+[[nodiscard("pure function"), gnu::cold]]
 /**
  * Generate random polynomial coefficients and populates `A`, `B` and `C` with them. Returns `false` on errors.
  */

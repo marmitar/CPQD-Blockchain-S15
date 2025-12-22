@@ -217,7 +217,7 @@ extern int ecall_name_check(const char *NULLABLE name) {
     return likely(ok) ? 0 : -1;
 }
 
-[[nodiscard("error must be checked"), gnu::pure, gnu::leaf, gnu::nothrow]]
+[[nodiscard("error must be checked"), gnu::leaf, gnu::nothrow]]
 /**
  * Challenge 1: Call the Enclave
  * -----------------------------
