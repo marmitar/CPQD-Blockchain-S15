@@ -71,23 +71,25 @@ static coefficients_t generate_coefficients(void) {
     drbg_ctr128_t rng = drbg_seeded_init(4);
 
     while (true) {
-        static constexpr uint64_t WIDTH = (uint64_t) (MAX_VALUE - MIN_VALUE - 1);
-        static_assert(WIDTH <= INT_MAX);
+        static constexpr uint64_t FULL_WIDTH = (uint64_t) (MAX_VALUE - MIN_VALUE) + 1;
+        static_assert(FULL_WIDTH <= INT_MAX);
 
         uint128_t ua = UINT128_MAX;
-        const bool ok1 = drbg_rand_bounded(&rng, &ua, WIDTH);
+        const bool ok1 = drbg_rand_bounded(&rng, &ua, FULL_WIDTH);
+
         uint128_t ub = UINT128_MAX;
-        const bool ok2 = drbg_rand_bounded(&rng, &ub, WIDTH);
+        const bool ok2 = drbg_rand_bounded(&rng, &ub, FULL_WIDTH);
+
         uint128_t uc = UINT128_MAX;
-        const bool ok3 = drbg_rand_bounded(&rng, &uc, WIDTH);
+        const bool ok3 = drbg_rand_bounded(&rng, &uc, FULL_WIDTH);
         if unlikely (!ok1 || !ok2 || !ok3) {
             return UNINITIALIZED_COEFFICIENTS;
         }
 
-        assume(ua < WIDTH && ub < WIDTH && uc < WIDTH);
-        const int ca = (int) (ua % WIDTH) + MIN_VALUE;
-        const int cb = (int) (ub % WIDTH) + MIN_VALUE;
-        const int cc = (int) (uc % WIDTH) + MIN_VALUE;
+        assume(ua < FULL_WIDTH && ub < FULL_WIDTH && uc < FULL_WIDTH);
+        const int ca = (int) (ua % FULL_WIDTH) + MIN_VALUE;
+        const int cb = (int) (ub % FULL_WIDTH) + MIN_VALUE;
+        const int cc = (int) (uc % FULL_WIDTH) + MIN_VALUE;
 
         static_assert(3 * MIN_VALUE >= INT_MIN);
         static_assert(3 * MAX_VALUE <= INT_MAX);
