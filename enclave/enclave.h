@@ -42,7 +42,7 @@ typedef struct drbg_ctr128 {
     uint128_t ctr;
 } drbg_ctr128_t;
 
-[[nodiscard("pure function"), gnu::const, gnu::cold, gnu::nothrow, gnu::leaf]]
+[[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow, gnu::leaf]]
 /**
  * Initialize the PRNG using the seed file. The `stream` selector allows picking a different generated stream.
  *
