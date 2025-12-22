@@ -16,6 +16,7 @@
 .*_cache/
 .venv/
 .seed
+.wraplock
 
 # Enclave auto generated headers
 app/enclave_u.c
