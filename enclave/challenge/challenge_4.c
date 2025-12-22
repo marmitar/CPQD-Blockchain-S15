@@ -14,24 +14,63 @@
  */
 static constexpr int64_t P = 2'147'483'647;
 
-// The coefficients, promoted to `int64_t` to avoid overflow during multiplication.
-static int64_t A = INT_MIN;
-static int64_t B = INT_MIN;
-static int64_t C = INT_MIN;
-
-// Must be checked before using the coefficients.
-static bool initialized = false;
-
-[[nodiscard("pure function"), gnu::cold]]
 /**
- * Generate random polynomial coefficients and populates `A`, `B` and `C` with them. Returns `false` on errors.
+ * Smallest possible value for the sum of all coefficients (inclusive).
+ *
+ * NOTE: each coefficient is also bounded by this value for faster pseudo-random generation.
  */
-static bool generate_coefficients(void) {
+static constexpr int MIN_VALUE = -100'000'000;
+/**
+ * Largest possible value for the sum of all coefficients (inclusive).
+ *
+ * NOTE: each coefficient is also bounded by this value for faster pseudo-random generation.
+ */
+static constexpr int MAX_VALUE = +100'000'000;
+
+[[nodiscard("pure function"), gnu::const, gnu::hot]]
+/** Promote to `int64_t` to avoid overflow. */
+static inline int64_t i64(int x) {
+    return (int64_t) x;
+}
+
+/** Check if a value is in the define `MIN_VALUE` to `MAX_VALUE` range (both inclusive). */
+#define IN_RANGE(value) likely(MIN_VALUE <= (value) && (value) <= MAX_VALUE)
+static_assert(INT_MIN < MIN_VALUE);
+static_assert(MIN_VALUE < MAX_VALUE);
+static_assert(MAX_VALUE < INT_MAX);
+
+/**
+ * The coefficients, promoted to `int64_t` to avoid overflow during multiplication.
+ */
+typedef struct coefficients {
+    int64_t a;
+    int64_t b;
+    int64_t c;
+} coefficients_t;
+
+/**
+ * Check if a given coefficient set is in the expected range.
+ */
+#define IS_VALID(poly) IN_RANGE((poly).a + (poly).b + (poly).c)
+
+/**
+ * An invalid set of coefficients used for initialization.
+ */
+static constexpr coefficients_t UNINITIALIZED_COEFFICIENTS = {
+    .a = INT_MIN,
+    .b = INT_MIN,
+    .c = INT_MIN,
+};
+static_assert(!IS_VALID(UNINITIALIZED_COEFFICIENTS));
+
+[[nodiscard("pure function"), gnu::const, gnu::cold]]
+/**
+ * Generate pseudo-random polynomial coefficients from fixed seed. Returns `UNINITIALIZED_COEFFICIENTS` on errors.
+ */
+static coefficients_t generate_coefficients(void) {
     drbg_ctr128_t rng = drbg_seeded_init(4);
 
     while (true) {
-        static constexpr int MIN_VALUE = -100'000'000;
-        static constexpr int MAX_VALUE = +100'000'000;
         static constexpr uint64_t WIDTH = (uint64_t) (MAX_VALUE - MIN_VALUE - 1);
         static_assert(WIDTH <= INT_MAX);
 
@@ -42,7 +81,7 @@ static bool generate_coefficients(void) {
         uint128_t uc = UINT128_MAX;
         const bool ok3 = drbg_rand_bounded(&rng, &uc, WIDTH);
         if unlikely (!ok1 || !ok2 || !ok3) {
-            return false;
+            return UNINITIALIZED_COEFFICIENTS;
         }
 
         assume(ua < WIDTH && ub < WIDTH && uc < WIDTH);
@@ -52,15 +91,30 @@ static bool generate_coefficients(void) {
 
         static_assert(3 * MIN_VALUE >= INT_MIN);
         static_assert(3 * MAX_VALUE <= INT_MAX);
-        if unlikely (ca + cb + cc <= MIN_VALUE || ca + cb + cc >= MAX_VALUE) {
+        if unlikely (!IN_RANGE(ca + cb + cc)) {
             continue;
         }
 
-        A = (int64_t) ca;
-        B = (int64_t) cb;
-        C = (int64_t) cc;
-        return initialized = true;
+        return (coefficients_t) {
+            .a = i64(ca),
+            .b = i64(cb),
+            .c = i64(cc),
+        };
     }
+}
+
+[[nodiscard("effectively pure function"), gnu::const, gnu::hot]]
+/**
+ * Get cached polynomial coefficients or generate from seed. Returns `UNINITIALIZED_COEFFICIENTS` on errors.
+ */
+static coefficients_t get_coefficients(void) {
+    static coefficients_t cache = UNINITIALIZED_COEFFICIENTS;
+    // CONCURRENCY: although racy, the seed guarantees `generate_coefficients` always return the same value,
+    // so we always write the same value. This is also why this function can be safely marked as `const`.
+    if unlikely (!IS_VALID(cache)) {
+        cache = generate_coefficients();
+    }
+    return cache;
 }
 
 /**
@@ -76,11 +130,12 @@ static bool generate_coefficients(void) {
  * HINT: the prime 2147483647 is irrelevant except when you supply *       a very large x.
  */
 extern int ecall_polinomio_secreto(const int x) {
-    if unlikely (!initialized) {
-        const bool ok = generate_coefficients();
-        if unlikely (!ok) {
-            abort();
-        }
+    const coefficients_t poly = get_coefficients();
+    if unlikely (!IS_VALID(poly)) {
+#ifdef DEBUG
+        printf("[DEBUG] ecall_polinomio_secreto: failed to generate coefficients\n");
+#endif
+        abort();
     }
 
     if unlikely (x == 0) {
@@ -91,8 +146,7 @@ extern int ecall_polinomio_secreto(const int x) {
     }
 
     static_assert(P <= INT_MAX);
-    const int64_t X = (int64_t) x;
-    return (int) ((((((A * X) % P + B) % P) * x) % P + C) % P);
+    return (int) ((((((poly.a * i64(x)) % P + poly.b) % P) * i64(x)) % P + poly.c) % P);
 }
 
 /**
@@ -105,19 +159,25 @@ extern int ecall_polinomio_secreto(const int x) {
  * HINT: the function is deliberately hard to brute-force.
  */
 extern int ecall_verificar_polinomio(int a, int b, int c) {
-    if unlikely (!initialized) {
-        const bool ok = generate_coefficients();
-        if unlikely (!ok) {
-            abort();
-        }
+    const coefficients_t poly = get_coefficients();
+    if unlikely (!IS_VALID(poly)) {
+#ifdef DEBUG
+        printf("[DEBUG] ecall_polinomio_secreto: failed to generate coefficients\n");
+#endif
+        abort();
     }
 
-    if likely (a != A || b != B || c != C) {
-        return 0;
+    if likely (i64(a) != poly.a || i64(b) != poly.b || i64(c) != poly.c) {
+        return (int) false;
     }
 
     printf("\n%s\n", SEPARATOR);
-    printf("[ENCLAVE] DESAFIO 4 CONCLUIDO!! os polinomios são: A=%" PRIi64 ", B=%" PRIi64 ", C=%" PRIi64 "\n", A, B, C);
+    printf(
+        "[ENCLAVE] DESAFIO 4 CONCLUIDO!! os polinomios são: A=%" PRIi64 ", B=%" PRIi64 ", C=%" PRIi64 "\n",
+        poly.a,
+        poly.b,
+        poly.c
+    );
     printf("%s\n", SEPARATOR);
-    return 1;
+    return (int) true;
 }

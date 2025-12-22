@@ -21,15 +21,17 @@ typedef struct word {
     char data[WORD_LEN];
 } word_t;
 
-[[nodiscard("pure function"), gnu::const]]
 /**
- * Word with all positions set to `\0`.
+ * Word with all positions set to `\0`, used for initialization.
  */
-static word_t empty_word(void) {
-    word_t empty = {0};
-    memset(&empty, '\0', sizeof(empty));
-    return empty;
-}
+static constexpr word_t EMPTY_WORD = {
+    .data = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
+
+/**
+ * Check for an unitialized secret word.
+ */
+#define IS_EMPTY(word) unlikely((word).data[0] == '\0')
 
 [[nodiscard("useless call otherwise"), gnu::nonnull(1)]]
 /**
@@ -51,20 +53,34 @@ static char generate_letter(drbg_ctr128_t *NONNULL rng) {
 
 [[nodiscard("pure function"), gnu::const, gnu::cold]]
 /**
- * Generate secret word from fixed seed.
+ * Generate secret word from fixed seed. Returns `EMPTY_WORD` on errors.
  */
-static word_t secret_word(void) {
+static word_t generate_secret_word(void) {
     drbg_ctr128_t rng = drbg_seeded_init(3);
 
-    word_t secret = empty_word();
+    word_t secret = EMPTY_WORD;
     for (size_t i = 0; i < WORD_LEN; i++) {
         const char ch = generate_letter(&rng);
         if unlikely (ch == EOF) {
-            return empty_word();
+            return EMPTY_WORD;
         }
         secret.data[i] = ch;
     }
     return secret;
+}
+
+[[nodiscard("effectively pure function"), gnu::const, gnu::hot]]
+/**
+ * Get secret word or generate from seed. Returns `EMPTY_WORD` on errors.
+ */
+static word_t get_secret_word(void) {
+    static word_t cache = EMPTY_WORD;
+    // CONCURRENCY: although racy, the seed guarantees `generate_secret_word` always return the same value,
+    // so we always write the same value. This is also why this function can be safely marked as `const`.
+    if unlikely (IS_EMPTY(cache)) {
+        cache = generate_secret_word();
+    }
+    return cache;
 }
 
 /**
@@ -77,14 +93,12 @@ static word_t secret_word(void) {
  * HINT: the secret word contains only uppercase letters, no spaces, diacritics or digits.
  */
 extern int ecall_palavra_secreta(char palavra[NULLABLE WORD_LEN]) {
-    static word_t secret = {0};
-    static bool initialized = false;
-    if unlikely (!initialized) {
-        secret = secret_word();
-        if unlikely (secret.data[0] == '\0') {
-            return -2;
-        }
-        initialized = true;
+    const word_t secret = get_secret_word();
+    if unlikely (IS_EMPTY(secret)) {
+#ifdef DEBUG
+        printf("[ENCLAVE] ecall_palavra_secreta: failed to generate secret word\n");
+#endif
+        return -2;
     }
 
     if unlikely (palavra == NULL) {

@@ -13,7 +13,7 @@ static constexpr size_t ROUNDS = 20;
 
 [[nodiscard("generated value"), gnu::nonnull(1)]]
 /**
- * Generate a random play: `0` (rock), `1` (paper), or `2` (scissors). Returns `UINT8_MAX` on errors.
+ * Generate a pseudo-random play: `0` (rock), `1` (paper), or `2` (scissors). Returns `UINT8_MAX` on errors.
  */
 static uint8_t random_play(drbg_ctr128_t *NONNULL rng) {
     uint128_t value = UINT128_MAX;
