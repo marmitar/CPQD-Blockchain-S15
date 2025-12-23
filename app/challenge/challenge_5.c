@@ -142,6 +142,8 @@ static uint8_t check_answers(const sgx_enclave_id_t eid, sgx_status_t *NONNULL s
         printf("Challenge 5: Invalid ecall_pedra_papel_tesoura wins = %d\n", wins);
         *status = SGX_ERROR_UNEXPECTED;
         return UINT8_MAX;
+    } else {
+        *status = SGX_SUCCESS;
     }
 
     games_played++;
