@@ -124,5 +124,5 @@ extern void print_error_message(sgx_status_t ret) {
     if unlikely (err.sug != NULL) {
         printf("Info: %s\n", err.sug);
     }
-    printf("Error: %s (0x%04x)\n", err.msg, err.err);
+    printf("Error: %s (0x%04x)\n", err.msg, (unsigned) err.err);
 }
