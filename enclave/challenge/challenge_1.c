@@ -124,9 +124,17 @@ static bool name_matches_position(
         return false;
     }
 
+    const size_t len = strlen(expected[i]);
     if unlikely (strncmp(str, expected[i], strlen(expected[i])) != 0) {
 #ifdef DEBUG
         printf("[DEBUG] name_matches_position: does not match i=%zu: expected=%s, str=%s\n", i, expected[i], str);
+#endif
+        return false;
+    }
+
+    if unlikely (str[len] != '\0' && !is_whitespace(str[len])) {
+#ifdef DEBUG
+        printf("[DEBUG] name_matches_position: length does not match i=%zu: longer than %zu\n", i, len);
 #endif
         return false;
     }
