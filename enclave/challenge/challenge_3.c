@@ -35,7 +35,7 @@ static constexpr word_t EMPTY_WORD = {
 
 [[nodiscard("useless call otherwise"), gnu::nonnull(1)]]
 /**
- * Generate a single letter from the specified list. Returns `EOF` on errors.
+ * Generate a single letter from the specified list. Returns `\0` on errors.
  */
 static char generate_letter(drbg_ctr128_t *NONNULL rng) {
     constexpr char LETTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -44,7 +44,7 @@ static char generate_letter(drbg_ctr128_t *NONNULL rng) {
     uint128_t index = 0;
     const bool ok = drbg_rand_bounded(rng, &index, N_LETTERS);
     if unlikely (!ok) {
-        return EOF;
+        return '\0';
     }
 
     assume(index < N_LETTERS);
@@ -61,7 +61,7 @@ static word_t generate_secret_word(void) {
     word_t secret = EMPTY_WORD;
     for (size_t i = 0; i < WORD_LEN; i++) {
         const char ch = generate_letter(&rng);
-        if unlikely (ch == EOF) {
+        if unlikely (ch == '\0') {
             return EMPTY_WORD;
         }
         secret.data[i] = ch;
