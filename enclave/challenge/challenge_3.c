@@ -69,6 +69,7 @@ static word_t generate_secret_word(void) {
     return secret;
 }
 
+[[nodiscard("error must be checked"), gnu::leaf, gnu::nothrow]]
 /**
  * Challenge 3: Find the Secret Word
  * ---------------------------------

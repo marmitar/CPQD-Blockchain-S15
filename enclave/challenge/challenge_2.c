@@ -23,7 +23,7 @@ static constexpr unsigned MAX_PASSWORD = 99'999;
 static constexpr unsigned UNINITIALIZED_PASSWORD = UINT_MAX;
 static_assert(!IS_VALID(UNINITIALIZED_PASSWORD));
 
-[[nodiscard("pure function"), gnu::const, gnu::hot]]
+[[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow]]
 /**
  * Generate password from fixed seed. Returns `UNINITIALIZED_PASSWORD` on errors.
  */

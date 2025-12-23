@@ -10,7 +10,7 @@
 #include "enclave_config.h"
 #include "enclave_t.h"
 
-[[nodiscard("pure function"), gnu::const]]
+[[nodiscard("pure function"), gnu::const, gnu::hot]]
 /**
  * Check if this byte is a space character.
  */
@@ -18,7 +18,7 @@ static bool is_whitespace(const char ch) {
     return isspace((unsigned char) ch);
 }
 
-[[nodiscard("pure function"), gnu::const]]
+[[nodiscard("pure function"), gnu::const, gnu::hot]]
 /**
  * Check if this byte is an uppercase letter.
  */
@@ -26,7 +26,7 @@ static bool is_uppercase_letter(const char ch) {
     return isalpha((unsigned char) ch) && isupper((unsigned char) ch);
 }
 
-[[nodiscard("pure function"), gnu::const]]
+[[nodiscard("pure function"), gnu::const, gnu::hot]]
 /**
  * Check if this byte is an lowercase letter.
  */
@@ -217,6 +217,7 @@ static bool match_name(const char *NULLABLE str, const size_t n, const unique_st
     return true;
 }
 
+[[nodiscard("error must be checked"), gnu::leaf, gnu::nothrow]]
 /**
  * Example code.
  */

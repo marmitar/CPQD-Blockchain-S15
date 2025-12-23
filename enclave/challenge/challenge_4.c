@@ -137,6 +137,7 @@ extern int ecall_polinomio_secreto(const int x) {
     return (int) ((((((poly.a * i64(x)) % P + poly.b) % P) * i64(x)) % P + poly.c) % P);
 }
 
+[[nodiscard("error must be checked"), gnu::leaf, gnu::nothrow]]
 /**
  * Challenge 4: Secret Polynomial
  * ------------------------------

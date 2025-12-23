@@ -11,7 +11,7 @@
 /** Pre-defined number of rounds in each Rock, Paper, Scissors game. */
 static constexpr size_t ROUNDS = 20;
 
-[[nodiscard("generated value"), gnu::nonnull(1)]]
+[[nodiscard("generated value"), gnu::nonnull(1), gnu::hot, gnu::nothrow]]
 /**
  * Generate a pseudo-random play: `0` (rock), `1` (paper), or `2` (scissors). Returns `UINT8_MAX` on errors.
  */
@@ -26,7 +26,7 @@ static uint8_t random_play(drbg_ctr128_t *NONNULL rng) {
     return (uint8_t) (value % 3);
 }
 
-[[nodiscard("do not throw away user calls")]]
+[[nodiscard("do not throw away user calls"), gnu::hot, gnu::nothrow]]
 /**
  * Call app for answer on a specific round.
  */
@@ -105,6 +105,7 @@ static char display_result(const round_result_t result) {
     }
 }
 
+[[nodiscard("error must be checked"), gnu::leaf, gnu::nothrow]]
 /**
  * Challenge 5: Rock, Paper, Scissors
  * ----------------------------------
