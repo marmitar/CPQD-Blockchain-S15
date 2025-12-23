@@ -15,7 +15,7 @@
  * Check if this byte is a space character.
  */
 static bool is_whitespace(const char ch) {
-    return isspace(ch);
+    return isspace((unsigned char) ch);
 }
 
 [[nodiscard("pure function"), gnu::const]]
@@ -23,7 +23,7 @@ static bool is_whitespace(const char ch) {
  * Check if this byte is an uppercase letter.
  */
 static bool is_uppercase_letter(const char ch) {
-    return isalpha(ch) && isupper(ch);
+    return isalpha((unsigned char) ch) && isupper((unsigned char) ch);
 }
 
 [[nodiscard("pure function"), gnu::const]]
@@ -31,7 +31,7 @@ static bool is_uppercase_letter(const char ch) {
  * Check if this byte is an lowercase letter.
  */
 static bool is_lowercase_letter(const char ch) {
-    return isalpha(ch) && islower(ch);
+    return isalpha((unsigned char) ch) && islower((unsigned char) ch);
 }
 
 /**
