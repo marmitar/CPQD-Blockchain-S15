@@ -51,7 +51,7 @@ static char generate_letter(drbg_ctr128_t *NONNULL rng) {
     return LETTERS[index % N_LETTERS];
 }
 
-[[nodiscard("pure function"), gnu::const, gnu::cold]]
+[[nodiscard("pure function"), gnu::const, gnu::hot]]
 /**
  * Generate secret word from fixed seed. Returns `EMPTY_WORD` on errors.
  */
@@ -69,20 +69,6 @@ static word_t generate_secret_word(void) {
     return secret;
 }
 
-[[nodiscard("effectively pure function"), gnu::const, gnu::hot]]
-/**
- * Get secret word or generate from seed. Returns `EMPTY_WORD` on errors.
- */
-static word_t get_secret_word(void) {
-    static word_t cache = EMPTY_WORD;
-    // CONCURRENCY: although racy, the seed guarantees `generate_secret_word` always return the same value,
-    // so we always write the same value. This is also why this function can be safely marked as `const`.
-    if unlikely (IS_EMPTY(cache)) {
-        cache = generate_secret_word();
-    }
-    return cache;
-}
-
 /**
  * Challenge 3: Find the Secret Word
  * ---------------------------------
@@ -93,7 +79,7 @@ static word_t get_secret_word(void) {
  * HINT: the secret word contains only uppercase letters, no spaces, diacritics or digits.
  */
 extern int ecall_palavra_secreta(char palavra[NULLABLE WORD_LEN]) {
-    const word_t secret = get_secret_word();
+    const word_t secret = generate_secret_word();
     if unlikely (IS_EMPTY(secret)) {
 #ifdef DEBUG
         printf("[ENCLAVE] ecall_palavra_secreta: failed to generate secret word\n");

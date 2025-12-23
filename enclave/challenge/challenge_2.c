@@ -23,7 +23,7 @@ static constexpr unsigned MAX_PASSWORD = 99'999;
 static constexpr unsigned UNINITIALIZED_PASSWORD = UINT_MAX;
 static_assert(!IS_VALID(UNINITIALIZED_PASSWORD));
 
-[[nodiscard("pure function"), gnu::const, gnu::cold]]
+[[nodiscard("pure function"), gnu::const, gnu::hot]]
 /**
  * Generate password from fixed seed. Returns `UNINITIALIZED_PASSWORD` on errors.
  */
@@ -40,20 +40,6 @@ static unsigned generate_password(void) {
     return MIN_PASSWORD + (unsigned) value;
 }
 
-[[nodiscard("effectively pure function"), gnu::const, gnu::hot]]
-/**
- * Get expected password or generate from seed. Returns `UNINITIALIZED_PASSWORD` on errors.
- */
-static unsigned get_password(void) {
-    static unsigned cache = UNINITIALIZED_PASSWORD;
-    // CONCURRENCY: although racy, the seed guarantees `generate_password` always return the same value,
-    // so we always write the same value. This is also why this function can be safely marked as `const`.
-    if unlikely (!IS_VALID(cache)) {
-        cache = generate_password();
-    }
-    return cache;
-}
-
 [[nodiscard("error must be checked"), gnu::leaf, gnu::nothrow]]
 /**
  * Challenge 2: Crack the Password
@@ -64,7 +50,7 @@ static unsigned get_password(void) {
  * HINT: the password is an integer between 0 and 99999.
  */
 extern int ecall_verificar_senha(unsigned int senha) {
-    const unsigned expected_password = get_password();
+    const unsigned expected_password = generate_password();
     if unlikely (!IS_VALID(expected_password)) {
 #ifdef DEBUG
         printf("[ENCLAVE] ecall_verificar_senha: failed to generate password\n");

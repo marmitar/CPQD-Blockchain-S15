@@ -63,7 +63,7 @@ static constexpr coefficients_t UNINITIALIZED_COEFFICIENTS = {
 };
 static_assert(!IS_VALID(UNINITIALIZED_COEFFICIENTS));
 
-[[nodiscard("pure function"), gnu::const, gnu::cold]]
+[[nodiscard("pure function"), gnu::const, gnu::hot]]
 /**
  * Generate pseudo-random polynomial coefficients from fixed seed. Returns `UNINITIALIZED_COEFFICIENTS` on errors.
  */
@@ -105,20 +105,6 @@ static coefficients_t generate_coefficients(void) {
     }
 }
 
-[[nodiscard("effectively pure function"), gnu::const, gnu::hot]]
-/**
- * Get cached polynomial coefficients or generate from seed. Returns `UNINITIALIZED_COEFFICIENTS` on errors.
- */
-static coefficients_t get_coefficients(void) {
-    static coefficients_t cache = UNINITIALIZED_COEFFICIENTS;
-    // CONCURRENCY: although racy, the seed guarantees `generate_coefficients` always return the same value,
-    // so we always write the same value. This is also why this function can be safely marked as `const`.
-    if unlikely (!IS_VALID(cache)) {
-        cache = generate_coefficients();
-    }
-    return cache;
-}
-
 /**
  * Challenge 4: Secret Polynomial
  * ------------------------------
@@ -132,7 +118,7 @@ static coefficients_t get_coefficients(void) {
  * HINT: the prime 2147483647 is irrelevant except when you supply *       a very large x.
  */
 extern int ecall_polinomio_secreto(const int x) {
-    const coefficients_t poly = get_coefficients();
+    const coefficients_t poly = generate_coefficients();
     if unlikely (!IS_VALID(poly)) {
 #ifdef DEBUG
         printf("[DEBUG] ecall_polinomio_secreto: failed to generate coefficients\n");
@@ -161,7 +147,7 @@ extern int ecall_polinomio_secreto(const int x) {
  * HINT: the function is deliberately hard to brute-force.
  */
 extern int ecall_verificar_polinomio(int a, int b, int c) {
-    const coefficients_t poly = get_coefficients();
+    const coefficients_t poly = generate_coefficients();
     if unlikely (!IS_VALID(poly)) {
 #ifdef DEBUG
         printf("[DEBUG] ecall_polinomio_secreto: failed to generate coefficients\n");
