@@ -55,7 +55,7 @@ static const char *NULLABLE skip_whitespace(string_t str, const string_t stop) {
         str++;
         if unlikely (str == stop) {
 #ifdef DEBUG
-            printf("[DEBUG] skip_whitespace: stop reached, str=%s\n", str);
+            printf("[DEBUG] skip_whitespace: stop reached\n");
 #endif
             return NULL;
         }
@@ -86,7 +86,7 @@ static const char *NULLABLE consume_name(string_t str, const string_t stop) {
         str++;
         if unlikely (str == stop) {
 #ifdef DEBUG
-            printf("[DEBUG] consume_name: stop reached, str=%s\n", str);
+            printf("[DEBUG] consume_name: stop reached\n");
 #endif
             return NULL;
         }
@@ -155,7 +155,15 @@ static bool match_name(const char *NULLABLE str, const size_t n, const unique_st
         return false;
     }
 
-    const string_t stop = str + MAX_STRING_LENGTH;
+    const size_t strn = strnlen(str, MAX_STRING_LENGTH);
+    if unlikely (strn >= MAX_STRING_LENGTH || str[strn] != '\0') {
+#ifdef DEBUG
+        printf("[DEBUG] match_name: string is too long\n");
+#endif
+        return false;
+    }
+
+    const string_t stop = str + strn + 1;
 
     str = skip_whitespace(str, stop);
     if unlikely (str == NULL) {
