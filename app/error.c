@@ -122,7 +122,7 @@ extern void print_error_message(sgx_status_t ret) {
     const sgx_errlist_t err = error_message(ret);
 
     if unlikely (err.sug != NULL) {
-        printf("Info: %s\n", err.sug);
+        (void) fprintf(stderr, "Info: %s\n", err.sug);
     }
-    printf("Error: %s (0x%04x)\n", err.msg, (unsigned) err.err);
+    (void) fprintf(stderr, "Error: %s (0x%04x)\n", err.msg, (unsigned) err.err);
 }

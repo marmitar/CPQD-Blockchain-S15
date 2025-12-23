@@ -28,8 +28,8 @@ extern int SGX_CDECL main(const int argc, const char *restrict NONNULL argv[NONN
     if unlikely (argc == 2) {
         enclave = argv[1];
     } else if unlikely (argc > 2) {
-        printf("Error: too many arguments\n");
-        printf("%s: [SIGNED_ENCLAVE.SO]\n", argv[0]);
+        (void) fprintf(stderr, "Error: too many arguments\n");
+        (void) fprintf(stderr, "%s: [SIGNED_ENCLAVE.SO]\n", argv[0]);
         return EXIT_FAILURE;
     }
 
