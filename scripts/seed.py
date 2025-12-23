@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import random
+import secrets
 import sys
 
 
@@ -23,7 +23,7 @@ def load_seed():
     if seed_option >= 0:
         seed = seed_option
     else:
-        seed = random.getrandbits(64)
+        seed = secrets.randbits(64)
 
     with open(seed_file, 'wt') as file:
         print(seed_option, file=file)
