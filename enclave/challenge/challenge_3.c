@@ -122,7 +122,7 @@ extern int ecall_palavra_secreta(char palavra[NULLABLE WORD_LEN]) {
 
     static_assert(WORD_LEN <= INT_MAX);
     printf("\n%s\n", SEPARATOR);
-    printf("[ENCLAVE] DESAFIO 3 CONCLUIDO!! a palavra secreta é %*s\n", (int) WORD_LEN, secret.data);
+    printf("[ENCLAVE] DESAFIO 3 CONCLUIDO!! a palavra secreta é %.*s\n", (int) WORD_LEN, secret.data);
     printf("%s\n", SEPARATOR);
     return 0;
 }

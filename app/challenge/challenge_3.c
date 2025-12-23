@@ -73,7 +73,7 @@ extern sgx_status_t challenge_3(sgx_enclave_id_t eid) {
         if (rv == 0) {
 #ifdef DEBUG
             static_assert(WORD_LEN <= INT_MAX);
-            printf("Challenge 3: secret = %*s\n", (int) WORD_LEN, guess.data);
+            printf("Challenge 3: secret = %.*s\n", (int) WORD_LEN, guess.data);
 #endif
             return SGX_SUCCESS;
         }
