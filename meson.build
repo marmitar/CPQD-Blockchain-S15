@@ -114,7 +114,7 @@ endif
 general_codegen = cc.get_supported_arguments(
     '-pipe',
     '-fvisibility=hidden',
-    debugging_enabled ? '-fstrict-overflow' : '-fno-strict-overflow',
+    debugging_enabled ? '-fno-strict-overflow' : '-fstrict-overflow',
     # _FORTIFY_SOURCE=2+ breaks static analysis on some stdlib functions for Clang
     '-D_FORTIFY_SOURCE=@0@'.format(debugging_enabled and cc.get_id() == 'gcc' ? 3 : 1),
     checked: 'warn',
