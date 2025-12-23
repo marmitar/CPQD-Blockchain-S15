@@ -235,7 +235,7 @@ static size_t sample_size(const double confidence, const double power, const siz
     // we abuse the fact that Var[n bernoulli] = n Var[bernoulli]
     const size_t n = (size_t) ceil((double) (ROUNDS - start) * sn);
     // sample size can't be zero
-    return likely(n <= 0) ? 1 : n;
+    return unlikely(n <= 0) ? 1 : n;
 }
 
 [[nodiscard("error must be checked"), gnu::nonnull(2), gnu::hot]]
