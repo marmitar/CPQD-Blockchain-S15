@@ -23,23 +23,36 @@
 #    define NONNULL _Nonnull
 // For completeness.
 #    define UNSPECIFIED _Null_unspecified
-#else  // GCC
+#else  // GCC & others
 // These pointer modifiers are specific to Clang, and are left as comments for readers on GCC.
 #    define NULLABLE
 #    define NONNULL
 #    define UNSPECIFIED
 #endif
 
+#if defined(__GNUC__)  // Clang & GCC
 /**
  * Marker for a branch that should be taken often or should be optimized for. Usually the "happy" case.
  * Probability is assumed to be 90%.
  */
-#define likely(x) (__builtin_expect((x), 1))
+#    define likely(x) (__builtin_expect((x), 1))
 /**
  * Marker for a branch that should be taken rarely or should be optimized against. Usually the error path.
  * Probability is assumed to be 10%.
  */
-#define unlikely(x) (__builtin_expect((x), 0))
+#    define unlikely(x) (__builtin_expect((x), 0))
+#else  // others
+/**
+ * Possible marker for a branch that should be taken often or should be optimized for. Usually the "happy" case.
+ * Probability is assumed to be 90%.
+ */
+#    define likely(x)   ((x))
+/**
+ * Possible marker for a branch that should be taken rarely or should be optimized against. Usually the error path.
+ * Probability is assumed to be 10%.
+ */
+#    define unlikely(x) ((x))
+#endif
 
 /** Stringification macro. */
 #define STR(...) STR_(__VA_ARGS__)
@@ -49,11 +62,14 @@
 #if defined(__clang__)
 /** Adds compiler hints. Checked on DEBUG builds. */
 #    define assume(condition) ((assert(condition)), __builtin_assume(condition))
-#else  // GCC
+#elif defined(__GNUC__)  // GCC
 /** Adds compiler hints. Checked on DEBUG builds. */
 #    define assume(condition) \
         assert(condition);    \
         [[gnu::assume(condition)]]
+#else  // others
+/** Might adds compiler hints. Checked on DEBUG builds. */
+#    define assume(condition) assert(condition)
 #endif
 
 #endif  // DEFINES_H

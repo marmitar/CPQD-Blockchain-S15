@@ -1,7 +1,7 @@
 # # # # # # # # # # # # # #
 # COMPILING THE USER APP  #
 
-math = cc.find_library('m', required : false)
+math = cc.find_library('m')
 
 challenges = files(
     'challenge/challenge_1.c',
