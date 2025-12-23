@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "defines.h"
-#include "enclave_config.h"
 
 /** Challenge output separator. */
 #define SEPARATOR "------------------------------------------------"
@@ -30,7 +29,7 @@ int printf(const char *NONNULL fmt, ...);
 typedef __uint128_t uint128_t;
 
 /** Maximum value for `uint128_t`. */
-[[maybe_unused]] static constexpr uint128_t UINT128_MAX = (uint128_t) -1;
+static constexpr uint128_t UINT128_MAX = (uint128_t) -1;
 
 /**
  * Deterministic Random Bit Generator (DRBG).
@@ -44,30 +43,16 @@ typedef struct drbg_ctr128 {
     uint128_t ctr;
 } drbg_ctr128_t;
 
-[[nodiscard("pure function"), gnu::const]]
-/**
- * Initialize the PRNG using an input `seed` and a `stream` selector.
- */
-static inline drbg_ctr128_t drbg_init(const uint64_t seed, const uint64_t stream) {
-    drbg_ctr128_t drbg = {0};
-
-    const uint64_t key[] = {seed, stream};
-    static_assert(sizeof(key) == sizeof(drbg.key));
-
-    memcpy(&(drbg.key), &key, sizeof(drbg.key));
-    memset(&(drbg.ctr), 0, sizeof(drbg.ctr));
-    return drbg;
-}
-
 [[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow]]
 /**
  * Initialize the PRNG using the seed file. The `stream` selector allows picking a different generated stream.
  *
  * Note: each different PRNG should use a unique stream selector, since the seed is the same.
+ *
+ * Note: although the seed may be random, it won't change for the lifetime of the program, so the output won't be
+ *   affected by another state and it doesn't leave any observable side-effect (besides logs in DEBUG builds).
  */
-static inline drbg_ctr128_t drbg_seeded_init(const uint64_t stream) {
-    return drbg_init(ENCLAVE_SEED, stream);
-}
+drbg_ctr128_t drbg_seeded_init(uint64_t stream);
 
 [[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow]]
 /**

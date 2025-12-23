@@ -47,6 +47,7 @@ sgx_trts = declare_dependency(
         f'@SGX_LIBDIR@/libsgx_trts@SGX_SIM@.a',
         '-Wl,--no-whole-archive',
         '-Wl,--start-group',
+        f'@SGX_LIBDIR@/libsgx_pthread.a',
         f'@SGX_LIBDIR@/libsgx_tstdc.a',
         f'@SGX_LIBDIR@/libsgx_tcxx.a',
         f'@SGX_LIBDIR@/libsgx_tcrypto.a',
@@ -121,7 +122,9 @@ enclave_cfg_data.set(
 )
 enclave_cfg_data.set(
     'ENCLAVE_SEED', seed,
-    description: 'Fixed seed, possibly randomly generated.',
+    description: seed < 0
+        ? 'Generate a random seed at runtime'
+        : 'Fixed seed for testing',
 )
 
 configure_file(
