@@ -2,8 +2,10 @@
 #define ENCLAVE_H
 
 #include <stdint.h>
+#include <string.h>
 
 #include "defines.h"
+#include "enclave_config.h"
 
 /** Challenge output separator. */
 #define SEPARATOR "------------------------------------------------"
@@ -42,36 +44,73 @@ typedef struct drbg_ctr128 {
     uint128_t ctr;
 } drbg_ctr128_t;
 
-[[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow, gnu::leaf]]
+[[nodiscard("pure function"), gnu::const]]
+/**
+ * Initialize the PRNG using an input `seed` and a `stream` selector.
+ */
+static inline drbg_ctr128_t drbg_init(const uint64_t seed, const uint64_t stream) {
+    drbg_ctr128_t drbg = {0};
+
+    const uint64_t key[] = {seed, stream};
+    static_assert(sizeof(key) == sizeof(drbg.key));
+
+    memcpy(&(drbg.key), &key, sizeof(drbg.key));
+    memset(&(drbg.ctr), 0, sizeof(drbg.ctr));
+    return drbg;
+}
+
+[[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow]]
 /**
  * Initialize the PRNG using the seed file. The `stream` selector allows picking a different generated stream.
  *
  * Note: each different PRNG should use a unique stream selector, since the seed is the same.
  */
-drbg_ctr128_t drbg_seeded_init(uint64_t stream);
+static inline drbg_ctr128_t drbg_seeded_init(const uint64_t stream) {
+    return drbg_init(ENCLAVE_SEED, stream);
+}
 
-[[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow, gnu::leaf]]
+[[nodiscard("pure function"), gnu::const, gnu::hot, gnu::nothrow]]
 /**
  * Replace the `stream` selector for the PRNG.
  *
  * Note: take care of keeping the stream selector unique throught the enclave.
  */
-drbg_ctr128_t drbg_set_stream(drbg_ctr128_t drbg, uint64_t stream);
+static inline drbg_ctr128_t drbg_set_stream(drbg_ctr128_t drbg, const uint64_t stream) {
+    uint64_t key[2] = {0, 0};
+    static_assert(sizeof(key) == sizeof(drbg.key));
+
+    memcpy(key, &(drbg.key), sizeof(drbg.key));
+    key[1] = stream;
+    memcpy(&(drbg.key), key, sizeof(drbg.key));
+
+    return drbg;
+}
 
 [[nodiscard("error must be checked"), gnu::nonnull(1, 2), gnu::hot, gnu::nothrow, gnu::leaf]]
 /**
- * Generate a pseudo-random number in `[0,UINT128_MAX)` from the DRBG sequence.
+ * Pick a pseudo-random number from the DRBG sequence if it's in the `[0,threshold)` range.
  *
  * @return `true` on success, or `false` if AES CTR failed.
  */
-bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output);
+bool drbg_rand_threshold(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, uint128_t threshold);
 
-[[nodiscard("error must be checked"), gnu::nonnull(1, 2), gnu::hot, gnu::nothrow, gnu::leaf]]
+[[nodiscard("error must be checked"), gnu::nonnull(1, 2), gnu::hot, gnu::nothrow]]
 /**
  * Generate a pseudo-random number in the range `[0,bound)` from the DRBG sequence.
  *
  * @return `true` on success, or `false` if AES CTR failed.
  */
-bool drbg_rand_bounded(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, uint128_t bound);
+static inline bool drbg_rand_bounded(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, uint128_t bound) {
+    // this function is inlined so that the threshold can be constant folded,
+    // since `bound` is always a constant in out code
+    const uint128_t threshold = UINT128_MAX - UINT128_MAX % bound;
+
+    uint128_t value = UINT128_MAX;
+    const bool ok = drbg_rand_threshold(drbg, &value, threshold);
+    if likely(ok) {
+        *output = value % bound;
+    }
+    return ok;
+}
 
 #endif /* ENCLAVE_H */

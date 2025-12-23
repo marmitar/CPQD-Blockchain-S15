@@ -4,11 +4,9 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "./enclave.h"
 #include "defines.h"
-#include "enclave_config.h"
 #include "enclave_t.h"
 
 /**
@@ -35,46 +33,13 @@ int printf(const char *NONNULL fmt, ...) {
     return likely(written < MAX_BYTES) ? written : MAX_BYTES;
 }
 
-[[nodiscard("pure function"), gnu::const]]
+[[nodiscard("error must be checked"), gnu::nonnull(1, 2), gnu::hot, gnu::nothrow]]
 /**
- * Initialize the PRNG using an input `seed` and a `stream` selector.
+ * Generate a pseudo-random number in `[0,UINT128_MAX)` from the DRBG sequence.
+ *
+ * @return `true` on success, or `false` if AES CTR failed.
  */
-static drbg_ctr128_t drbg_init(const uint64_t seed, const uint64_t stream) {
-    drbg_ctr128_t drbg = {0};
-
-    const uint64_t key[] = {seed, stream};
-    static_assert(sizeof(key) == sizeof(drbg.key));
-
-    memcpy(&(drbg.key), &key, sizeof(drbg.key));
-    memset(&(drbg.ctr), 0, sizeof(drbg.ctr));
-    return drbg;
-}
-
-/**
- * Initialize the PRNG using the seed file and a `stream` selector.
- */
-drbg_ctr128_t drbg_seeded_init(const uint64_t stream) {
-    return drbg_init(ENCLAVE_SEED, stream);
-}
-
-/**
- * Replace the `stream` selector for the PRNG.
- */
-drbg_ctr128_t drbg_set_stream(drbg_ctr128_t drbg, const uint64_t stream) {
-    uint64_t key[2] = {0, 0};
-    static_assert(sizeof(key) == sizeof(drbg.key));
-
-    memcpy(key, &(drbg.key), sizeof(drbg.key));
-    key[1] = stream;
-    memcpy(&(drbg.key), key, sizeof(drbg.key));
-
-    return drbg;
-}
-
-/**
- * Generate a pseudo-random number from the DRBG sequence.
- */
-bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output) {
+static bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output) {
     // randomized plaintext is useless in CTR mode
     const uint128_t PLAINTEXT = 0;
 
@@ -97,9 +62,8 @@ bool drbg_rand(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output) {
 /**
  * Generate a pseudo-random number from 0 up to (but not including) `bound`.
  */
-bool drbg_rand_bounded(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, uint128_t bound) {
-    assume(bound != 0);
-    const uint128_t threshold = UINT128_MAX - UINT128_MAX % bound;
+bool drbg_rand_threshold(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, uint128_t threshold) {
+    assume(threshold > 0);
 
     while (true) {
         uint128_t value = UINT128_MAX;
@@ -109,7 +73,7 @@ bool drbg_rand_bounded(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, u
         }
 
         if likely (value < threshold) {
-            *output = value % bound;
+            *output = value;
             return true;
         }
     }
