@@ -101,13 +101,14 @@ bool drbg_rand_threshold(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output,
  * @return `true` on success, or `false` if AES CTR failed.
  */
 static inline bool drbg_rand_bounded(drbg_ctr128_t *NONNULL drbg, uint128_t *NONNULL output, uint128_t bound) {
+    assume(bound != 0);
     // this function is inlined so that the threshold can be constant folded,
     // since `bound` is always a constant in out code
     const uint128_t threshold = UINT128_MAX - UINT128_MAX % bound;
 
     uint128_t value = UINT128_MAX;
     const bool ok = drbg_rand_threshold(drbg, &value, threshold);
-    if likely(ok) {
+    if likely (ok) {
         *output = value % bound;
     }
     return ok;
