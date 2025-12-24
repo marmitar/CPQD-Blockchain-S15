@@ -8,21 +8,25 @@ on:
 jobs:
   tests:
     name: Challenge Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      SDK_INSTALLER: https://download.01.org/intel-sgx/sgx-linux/2.27/distro/ubuntu24.04-server/sgx_linux_x64_sdk_2.27.100.1.bin
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '>= 3.13'
 
       - name: Install Intel SGX SDK
         run: |
-          wget https://download.01.org/intel-sgx/sgx-linux/2.26/distro/ubuntu24.04-server/sgx_linux_x64_sdk_2.26.100.0.bin
-          chmod +x sgx_linux_x64_sdk_2.26.100.0.bin
-          sudo ./sgx_linux_x64_sdk_2.26.100.0.bin --prefix /opt/intel
+          wget "${SDK_INSTALLER}"
+          INSTALLER="$(basename "${SDK_INSTALLER}")"
+          chmod +x "${INSTALLER}"
+          sudo ./"${INSTALLER}" --prefix /opt/intel
+          rm "${INSTALLER}"
 
       - name: Install Meson
         id: deps
