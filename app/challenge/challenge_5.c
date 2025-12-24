@@ -64,19 +64,19 @@ static double invnorm(const double p) {
 
     double x = NAN;
     // rational approximation for lower region
-    if (/*isless(0, p) &&*/ isless(p, p_low)) {
+    if (isless(0, p) && isless(p, p_low)) {
         const double q = sqrt(-2.0 * log(p));
         x = (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
     }
     // rational approximation for central region
-    else if (/*islessequal(p_low, p) &&*/ islessequal(p, p_high)) {
+    else if (islessequal(p_low, p) && islessequal(p, p_high)) {
         const double q = p - 0.5;
         const double r = q * q;
         x = (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q
             / (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
     }
     // rational approximation for upper region
-    else /*if (isless(p_high, p) && isless(p, 1))*/ {
+    else if (isless(p_high, p) && isless(p, 1)) {
         const double q = sqrt(-2.0 * log(1.0 - p));
         x = -(((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) / ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
     }
