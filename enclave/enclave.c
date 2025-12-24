@@ -77,7 +77,11 @@ static bool drbg_seed_init(pthread_rwlock_t *NONNULL lock, bool *NONNULL initial
     }
 
 #ifdef DEBUG
-    printf("[DEBUG] drbg_seed: %016" PRIx64 "\n", *seed);
+#    if ENCLAVE_SEED < 0
+    printf("[DEBUG] drbg_seed: predefined %016" PRIx64 "\n", *seed);
+#    else
+    printf("[DEBUG] drbg_seed: generated %016" PRIx64 "\n", *seed);
+#    endif
 #endif
     return true;
 }

@@ -166,7 +166,7 @@ pcg = subproject('pcg') \
     .get_variable('pcg_c_dep') \
     .as_system('system')
 
-seed = get_option('enclave_seed')
+seed = get_option('seed')
 
 # # # # # #
 # TARGETS #

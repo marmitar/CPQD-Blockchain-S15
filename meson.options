@@ -17,7 +17,7 @@ option('student_name',
     description: 'Name of the student to be matched. Will be titlecased.',
 )
 
-option('enclave_seed',
+option('seed',
     type: 'integer',
     min: -1,
     value: -1,
