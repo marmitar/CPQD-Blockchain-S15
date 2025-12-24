@@ -115,7 +115,7 @@ static size_t games_played = 0;
  *
  * TIP: use static variables if you need to keep state between calls.
  **/
-extern unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
+unsigned int ocall_pedra_papel_tesoura(unsigned int round) {
     if unlikely (round < 1 || round > ROUNDS) {
         printf("Challenge 5: Invalid input round = %u\n", round);
         return UINT_MAX;
@@ -393,7 +393,7 @@ static sgx_status_t challenge_5_exact(const sgx_enclave_id_t eid) {
  * statistical one has 98% probability of finding the solution. Additionally, the stochastic solution allows
  * for extreme parallelization.
  */
-extern sgx_status_t challenge_5(sgx_enclave_id_t eid) {
+sgx_status_t challenge_5(sgx_enclave_id_t eid) {
     games_played = 0;
     sgx_status_t status = challenge_5_stochastic(eid);
     const size_t stochastic_games = games_played;

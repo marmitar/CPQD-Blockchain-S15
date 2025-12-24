@@ -13,7 +13,7 @@
  * Brute force all possible passwords, from `0` to `99_999`, and find the correct one. Up to 100 thousand
  * calls to `ecall_verificar_senha` are required.
  */
-extern sgx_status_t challenge_2(sgx_enclave_id_t eid) {
+sgx_status_t challenge_2(sgx_enclave_id_t eid) {
     static constexpr unsigned MIN_PASSWORD = 0;
     static constexpr unsigned MAX_PASSWORD = 99'999;
 

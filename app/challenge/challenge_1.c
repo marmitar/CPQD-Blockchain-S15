@@ -12,7 +12,7 @@
  *
  * Just call `ecall_verificar_aluno` with my own name, everything in title case, including the connective "de".
  */
-extern sgx_status_t challenge_1(sgx_enclave_id_t eid) {
+sgx_status_t challenge_1(sgx_enclave_id_t eid) {
     const char name[] = "Tiago De Paula Alves";
 
 #ifdef DEBUG

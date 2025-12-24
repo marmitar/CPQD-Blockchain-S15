@@ -127,7 +127,7 @@ static char display_result(const round_result_t result) {
  * HINT: the strategy is deterministic; as long as the sequence of previous results is the same, the enclave
  *  plays the same moves.
  **/
-extern int ecall_pedra_papel_tesoura(void) {
+int ecall_pedra_papel_tesoura(void) {
     uint64_t stream = 5;
 
     drbg_ctr128_t rng = drbg_seeded_init(stream);

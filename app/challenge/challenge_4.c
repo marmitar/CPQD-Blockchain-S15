@@ -169,7 +169,7 @@ static struct coefficients solve_polynomial_coefficients(
  * coefficients for the secret polynomial. Only 3 calls to `ecall_polinomio_secreto` and 1 call to
  * `ecall_verificar_polinomio` are made.
  */
-extern sgx_status_t challenge_4(sgx_enclave_id_t eid) {
+sgx_status_t challenge_4(sgx_enclave_id_t eid) {
     const int x[3] = {10'000, 22'222, 303'030};
     int y[3] = {INT_MIN, INT_MIN, INT_MIN};
 

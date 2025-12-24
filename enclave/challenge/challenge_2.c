@@ -49,7 +49,7 @@ static unsigned generate_password(void) {
  *
  * HINT: the password is an integer between 0 and 99999.
  */
-extern int ecall_verificar_senha(unsigned int senha) {
+int ecall_verificar_senha(unsigned int senha) {
     const unsigned expected_password = generate_password();
     if unlikely (!IS_VALID(expected_password)) {
 #ifdef DEBUG

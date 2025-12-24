@@ -14,7 +14,7 @@
 /**
  * OCALL called by the enclave to print some text to the terminal.
  **/
-extern void ocall_print_string(const char *NULLABLE str) {
+void ocall_print_string(const char *NULLABLE str) {
     /* Proxy/Bridge will check the length and null-terminate
      * the input string to prevent buffer overflow.
      */
@@ -22,7 +22,7 @@ extern void ocall_print_string(const char *NULLABLE str) {
 }
 
 /* Application entry */
-extern int SGX_CDECL main(const int argc, const char *restrict NONNULL argv[NONNULL argc]) {
+int SGX_CDECL main(const int argc, const char *restrict NONNULL argv[NONNULL argc]) {
     const char *NONNULL enclave = "enclave-desafio-5.signed.so";
     // accept an optional argument for the enclave file
     if unlikely (argc == 2) {

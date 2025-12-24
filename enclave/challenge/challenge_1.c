@@ -229,7 +229,7 @@ static bool match_name(const char *NULLABLE str, const size_t n, const unique_st
 /**
  * Example code.
  */
-extern int ecall_name_check(const char *NULLABLE name) {
+int ecall_name_check(const char *NULLABLE name) {
     const bool ok = match_name(name, SIZE_MAX, NULL);
     return likely(ok) ? 0 : -1;
 }
@@ -241,7 +241,7 @@ extern int ecall_name_check(const char *NULLABLE name) {
  *
  * Just call this function passing your full name.
  */
-extern int ecall_verificar_aluno(const char *NULLABLE nome) {
+int ecall_verificar_aluno(const char *NULLABLE nome) {
     static const unique_string_t EXPECTED_NAME[] = STUDENT_NAME;
     const size_t len = sizeof(EXPECTED_NAME) / sizeof(EXPECTED_NAME[0]);
 

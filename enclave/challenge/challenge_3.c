@@ -79,7 +79,7 @@ static word_t generate_secret_word(void) {
  *
  * HINT: the secret word contains only uppercase letters, no spaces, diacritics or digits.
  */
-extern int ecall_palavra_secreta(char palavra[NULLABLE WORD_LEN]) {
+int ecall_palavra_secreta(char palavra[NULLABLE WORD_LEN]) {
     const word_t secret = generate_secret_word();
     if unlikely (IS_EMPTY(secret)) {
 #ifdef DEBUG

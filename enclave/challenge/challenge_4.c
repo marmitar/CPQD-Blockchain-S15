@@ -117,7 +117,7 @@ static coefficients_t generate_coefficients(void) {
  *
  * HINT: the prime 2147483647 is irrelevant except when you supply *       a very large x.
  */
-extern int ecall_polinomio_secreto(const int x) {
+int ecall_polinomio_secreto(const int x) {
     const coefficients_t poly = generate_coefficients();
     if unlikely (!IS_VALID(poly)) {
 #ifdef DEBUG
@@ -147,7 +147,7 @@ extern int ecall_polinomio_secreto(const int x) {
  * HINT: -10^8 < (a + b + c) < 10^8.
  * HINT: the function is deliberately hard to brute-force.
  */
-extern int ecall_verificar_polinomio(int a, int b, int c) {
+int ecall_verificar_polinomio(int a, int b, int c) {
     const coefficients_t poly = generate_coefficients();
     if unlikely (!IS_VALID(poly)) {
 #ifdef DEBUG

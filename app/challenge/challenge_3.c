@@ -55,7 +55,7 @@ static word_t update_secret(word_t secret, const word_t guess, const char letter
  * except that each position is tested independently, allowing for per letter "parallelism". In total, only 26
  * calls to `ecall_palavra_secreta` or less are required.
  */
-extern sgx_status_t challenge_3(sgx_enclave_id_t eid) {
+sgx_status_t challenge_3(sgx_enclave_id_t eid) {
     constexpr char LETTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const size_t N_LETTERS = strlen(LETTERS);
 
