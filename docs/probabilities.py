@@ -33,13 +33,13 @@ def sample_size(start: NDArray[np.uint8]) -> NDArray[np.uint32]:
     return np.maximum(n, 1)
 
 
-def p_correct_pick(s: np.uint8, n: np.uint32) -> np.float64:
+def p_correct_pick(s: np.uint8, n: np.uint32) -> np.float64 | int:
     """
     Calculate the probability of making a correct pick given the sample sizes.
     """
     t = (ROUNDS - s - 1) * n
 
-    def p_k(k: int) -> float:
+    def p_k(k: int) -> np.float64:
         """Probability that it picks the correct value, given that it wins `k` times."""
 
         # probability that the correct value wins `k` random rounds in total
@@ -50,13 +50,13 @@ def p_correct_pick(s: np.uint8, n: np.uint32) -> np.float64:
         p_wrong = binom.cdf(k + n - 1, t, PROB) + binom.pmf(k + n, t, PROB) / 3
         # since the correct value won `k` random and `n` fixed (by virtue of being correct),
         # and the wrong ones won less then `k + n` (random only), then we choose the correct value
-        return p_correct * p_wrong**2
+        return np.float64(p_correct * p_wrong**2)
 
     p = sum(p_k(k) for k in range(t + 1))
     return max(0, min(p, 1))
 
 
-def show(name: str, n: int, p: float) -> None:
+def show(name: str, n: np.uint32, p: np.float64 | np.int_ | int) -> None:
     """
     Display the results in a formatted manner.
     """
