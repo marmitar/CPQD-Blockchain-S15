@@ -118,11 +118,11 @@ static sgx_errlist_t error_message(sgx_status_t ret) {
 }
 
 /** Check error conditions for loading enclave */
-extern void print_error_message(sgx_status_t ret) {
+void print_error_message(sgx_status_t ret) {
     const sgx_errlist_t err = error_message(ret);
 
+    (void) fprintf(stderr, "Error: %s (0x%04x)\n", err.msg, (unsigned) err.err);
     if unlikely (err.sug != NULL) {
         (void) fprintf(stderr, "Info: %s\n", err.sug);
     }
-    (void) fprintf(stderr, "Error: %s (0x%04x)\n", err.msg, (unsigned) err.err);
 }
